@@ -120,11 +120,99 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
+exports.Prisma.AccountScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  type: 'type',
+  provider: 'provider',
+  providerAccountId: 'providerAccountId',
+  refresh_token: 'refresh_token',
+  access_token: 'access_token',
+  expires_at: 'expires_at',
+  token_type: 'token_type',
+  scope: 'scope',
+  id_token: 'id_token',
+  session_state: 'session_state'
+};
+
+exports.Prisma.SessionScalarFieldEnum = {
+  id: 'id',
+  sessionToken: 'sessionToken',
+  userId: 'userId',
+  expires: 'expires'
+};
+
+exports.Prisma.VerificationTokenScalarFieldEnum = {
+  identifier: 'identifier',
+  token: 'token',
+  expires: 'expires'
+};
+
 exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
-  email: 'email',
   name: 'name',
-  createdAt: 'createdAt'
+  email: 'email',
+  emailVerified: 'emailVerified',
+  image: 'image',
+  password: 'password',
+  role: 'role',
+  noHp: 'noHp',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.MitraScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  namaMitra: 'namaMitra',
+  noHp: 'noHp',
+  alamat: 'alamat',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ArmadaScalarFieldEnum = {
+  id: 'id',
+  mitraId: 'mitraId',
+  namaKendaraan: 'namaKendaraan',
+  merek: 'merek',
+  model: 'model',
+  tahun: 'tahun',
+  nomorPlat: 'nomorPlat',
+  statusKetersediaan: 'statusKetersediaan',
+  hargaPerHari: 'hargaPerHari',
+  foto: 'foto',
+  deskripsi: 'deskripsi',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.DompetScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  mitraId: 'mitraId',
+  saldo: 'saldo'
+};
+
+exports.Prisma.PemesananScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  armadaId: 'armadaId',
+  tanggalSewa: 'tanggalSewa',
+  tanggalSelesai: 'tanggalSelesai',
+  totalHarga: 'totalHarga',
+  statusPemesanan: 'statusPemesanan',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.TransaksiSaldoScalarFieldEnum = {
+  id: 'id',
+  dompetId: 'dompetId',
+  jenis: 'jenis',
+  jumlah: 'jumlah',
+  keterangan: 'keterangan',
+  tanggalTransaksi: 'tanggalTransaksi'
 };
 
 exports.Prisma.SortOrder = {
@@ -141,10 +229,42 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
+exports.Role = exports.$Enums.Role = {
+  ADMIN: 'ADMIN',
+  MITRA: 'MITRA',
+  USER: 'USER'
+};
 
+exports.StatusKetersediaan = exports.$Enums.StatusKetersediaan = {
+  TERSEDIA: 'TERSEDIA',
+  DISEWA: 'DISEWA',
+  PERAWATAN: 'PERAWATAN'
+};
+
+exports.StatusPemesanan = exports.$Enums.StatusPemesanan = {
+  MENUNGGU: 'MENUNGGU',
+  DIKONFIRMASI: 'DIKONFIRMASI',
+  AKTIF: 'AKTIF',
+  SELESAI: 'SELESAI',
+  DIBATALKAN: 'DIBATALKAN'
+};
+
+exports.JenisTransaksi = exports.$Enums.JenisTransaksi = {
+  TOPUP: 'TOPUP',
+  PEMBAYARAN: 'PEMBAYARAN',
+  REFUND: 'REFUND'
+};
 
 exports.Prisma.ModelName = {
-  User: 'User'
+  Account: 'Account',
+  Session: 'Session',
+  VerificationToken: 'VerificationToken',
+  User: 'User',
+  Mitra: 'Mitra',
+  Armada: 'Armada',
+  Dompet: 'Dompet',
+  Pemesanan: 'Pemesanan',
+  TransaksiSaldo: 'TransaksiSaldo'
 };
 
 /**
