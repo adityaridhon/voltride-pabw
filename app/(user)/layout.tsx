@@ -1,5 +1,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
 const navSections = [
   {
@@ -42,9 +45,31 @@ const navSections = [
 // - Fetch wallet balance
 // - Fetch navigation data
 
+function formatRupiah(value: number) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(value);
+}
 
+export default async function UserLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const session = await auth();
+  if (!session?.user) {
+    redirect("/login");
+  }
 
-export default function UserLayout({ children }: { children: ReactNode }) {
+  const dompet = await prisma.dompet.findUnique({
+    where: { userId: session.user.id },
+    select: { saldo: true },
+  });
+
+  const saldo = formatRupiah(Number(dompet?.saldo ?? 0));
+
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
       <div className="pointer-events-none absolute inset-0">
@@ -69,7 +94,7 @@ export default function UserLayout({ children }: { children: ReactNode }) {
 
           <div className="mt-6 rounded-2xl border border-emerald-400/20 bg-gradient-to-br from-emerald-500/15 via-emerald-500/5 to-transparent p-4">
             <p className="text-xs text-emerald-200/80">Saldo utama</p>
-            <p className="mt-2 text-2xl font-semibold">Rp 2.450.000</p>
+            <p className="mt-2 text-2xl font-semibold">{saldo}</p>
             <p className="mt-1 text-xs text-slate-400">
               Terakhir update 2 menit lalu
             </p>

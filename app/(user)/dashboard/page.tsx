@@ -1,12 +1,6 @@
-const quickStats = [
-  {
-    label: "Saldo tersedia",
-    value: "Rp 2.450.000",
-    note: "+12% dari bulan lalu",
-  },
-  { label: "Poin perjalanan", value: "1.240", note: "Tukar untuk diskon" },
-  { label: "Transaksi bulan ini", value: "28", note: "2 transaksi tertunda" },
-];
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
 const recentTransactions = [
   {
@@ -41,7 +35,35 @@ const goals = [
   { label: "Upgrade paket", progress: 82 },
 ];
 
-export default function DashboardPage() {
+function formatRupiah(value: number) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(value);
+}
+
+export default async function DashboardPage() {
+  const session = await auth();
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { name: true, dompet: { select: { saldo: true } } },
+  });
+
+  const saldo = formatRupiah(Number(user?.dompet?.saldo ?? 0));
+  const quickStats = [
+    {
+      label: "Saldo tersedia",
+      value: saldo,
+      note: "Update realtime",
+    },
+    { label: "Poin perjalanan", value: "1.240", note: "Tukar untuk diskon" },
+    { label: "Transaksi bulan ini", value: "28", note: "2 transaksi tertunda" },
+  ];
   return (
     <section className="space-y-6">
       <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -50,7 +72,7 @@ export default function DashboardPage() {
             Ringkasan Dompet
           </p>
           <h1 className="mt-2 font-heading text-3xl font-semibold">
-            Selamat datang kembali, Raka
+            Selamat datang kembali, {user?.name ?? "Pengguna"}
           </h1>
           <p className="mt-2 text-sm text-slate-400">
             Pantau saldo, transaksi, dan target finansial perjalanan kamu di

@@ -1,31 +1,6 @@
-const topupOptions = [
-  "Rp 50.000",
-  "Rp 100.000",
-  "Rp 150.000",
-  "Rp 250.000",
-  "Rp 500.000",
-  "Rp 1.000.000",
-];
+import { topUpWithQris } from "@/actions/wallet.actions";
 
-const paymentMethods = [
-  { name: "Bank transfer instan", desc: "Proses kurang dari 1 menit" },
-  { name: "Virtual account", desc: "Bebas biaya admin" },
-  { name: "Kartu debit", desc: "Maksimal Rp 2.000.000" },
-];
-
-
-// Insaya allah YANG BISA DIBUAT
-// HALAMAN TOP UP
-// ========================================
-
-// 1. Select nominal active
-// - Pilih nominal top up
-// - Highlight nominal yang dipilih
-
-// 2. Custom nominal validation
-// - Minimal top up
-// - Maksimal top up
-// - Format rupiah otomatis
+const quickAmounts = ["50000", "100000", "150000", "250000", "500000"];
 
 
 export default function TopupPage() {
@@ -44,51 +19,85 @@ export default function TopupPage() {
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-5">
-          <h2 className="font-heading text-lg">Nominal cepat</h2>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {topupOptions.map((item) => (
-              <button
-                key={item}
-                className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-4 text-left text-sm font-semibold text-slate-200 transition hover:border-emerald-400/60"
-              >
-                {item}
-                <p className="mt-2 text-xs text-slate-400">
-                  Tanpa biaya tambahan
-                </p>
-              </button>
-            ))}
+        <form
+          action={topUpWithQris}
+          className="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-5"
+        >
+          <h2 className="font-heading text-lg">Pembayaran QRIS</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Scan QRIS di bawah, lalu klik tombol sudah bayar untuk menambah
+            saldo.
+          </p>
+
+          <div className="mt-5 flex items-center justify-center rounded-2xl border border-dashed border-emerald-400/40 bg-slate-900/50 p-6">
+            <div className="grid grid-cols-6 gap-1">
+              {Array.from({ length: 36 }).map((_, index) => (
+                <span
+                  key={index}
+                  className={`h-3 w-3 rounded-sm ${
+                    index % 5 === 0 || index % 7 === 0
+                      ? "bg-emerald-200"
+                      : "bg-slate-800"
+                  }`}
+                />
+              ))}
+            </div>
           </div>
-          <div className="mt-6 rounded-2xl border border-slate-800/60 bg-slate-900/60 p-4">
+
+          <div className="mt-5 rounded-2xl border border-slate-800/60 bg-slate-900/60 p-4">
             <label className="text-xs uppercase tracking-[0.2em] text-slate-500">
-              Nominal custom
+              Nominal top up
             </label>
             <input
+              name="amount"
               type="text"
-              placeholder="Masukkan nominal"
+              placeholder="Contoh: 100000"
               className="mt-3 w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500"
+              required
             />
+            <div className="mt-4 flex flex-wrap gap-2">
+              {quickAmounts.map((amount) => (
+                <span
+                  key={amount}
+                  className="rounded-full border border-slate-700/80 px-3 py-1 text-xs text-slate-300"
+                >
+                  Rp {Number(amount).toLocaleString("id-ID")}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
+
+          <button className="mt-5 w-full rounded-full bg-emerald-400/90 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300">
+            Sudah bayar
+          </button>
+        </form>
 
         <div className="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-5">
-          <h2 className="font-heading text-lg">Metode pembayaran</h2>
-          <div className="mt-4 space-y-3">
-            {paymentMethods.map((method) => (
-              <div
-                key={method.name}
-                className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-4"
-              >
-                <p className="text-sm font-semibold text-slate-100">
-                  {method.name}
-                </p>
-                <p className="mt-1 text-xs text-slate-400">{method.desc}</p>
-              </div>
-            ))}
+          <h2 className="font-heading text-lg">Instruksi singkat</h2>
+          <div className="mt-4 space-y-4 text-sm text-slate-300">
+            <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                1. Buka aplikasi bank
+              </p>
+              <p className="mt-2">Pilih menu QRIS dan scan kode di samping.</p>
+            </div>
+            <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                2. Masukkan nominal
+              </p>
+              <p className="mt-2">
+                Pastikan nominal sesuai agar saldo terisi otomatis.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                3. Konfirmasi
+              </p>
+              <p className="mt-2">
+                Klik tombol sudah bayar setelah transaksi berhasil.
+              </p>
+            </div>
           </div>
-          <button className="mt-5 w-full rounded-full bg-emerald-400/90 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300">
-            Lanjutkan pembayaran
-          </button>
         </div>
       </div>
     </section>

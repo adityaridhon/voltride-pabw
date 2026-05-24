@@ -1,16 +1,6 @@
-const pengguna = {
-  id_pengguna: 128,
-  nama: "Raka Pratama",
-  email: "raka@voltride.id",
-  no_hp: "+62 812 1234 5678",
-  role: "user",
-};
-
-const dompet = {
-  id_dompet: 44,
-  id_pengguna: 128,
-  saldo: "Rp 2.450.000",
-};
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
 const pemesanan = [
   {
@@ -78,7 +68,32 @@ const methods = [
   { name: "E-Wallet OVO", info: "Terhubung" },
 ];
 
-export default function ProfilePage() {
+function formatRupiah(value: number) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(value);
+}
+
+export default async function ProfilePage() {
+  const session = await auth();
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      name: true,
+      email: true,
+      noHp: true,
+      dompet: { select: { saldo: true } },
+    },
+  });
+
+  const saldo = formatRupiah(Number(user?.dompet?.saldo ?? 0));
+
   return (
     <section className="space-y-6">
       <header>
@@ -97,7 +112,7 @@ export default function ProfilePage() {
         {[
           {
             label: "Saldo dompet",
-            value: dompet.saldo,
+            value: saldo,
             note: "Siap dipakai",
           },
           {
@@ -136,7 +151,7 @@ export default function ProfilePage() {
               </label>
               <input
                 type="text"
-                defaultValue={pengguna.nama}
+                defaultValue={user?.name ?? ""}
                 className="mt-3 w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500"
               />
             </div>
@@ -146,7 +161,7 @@ export default function ProfilePage() {
               </label>
               <input
                 type="email"
-                defaultValue={pengguna.email}
+                defaultValue={user?.email ?? ""}
                 className="mt-3 w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500"
               />
             </div>
@@ -156,7 +171,7 @@ export default function ProfilePage() {
               </label>
               <input
                 type="tel"
-                defaultValue={pengguna.no_hp}
+                defaultValue={user?.noHp ?? ""}
                 className="mt-3 w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500"
               />
             </div>
@@ -173,7 +188,7 @@ export default function ProfilePage() {
               Saldo aktif
             </p>
             <p className="mt-2 text-2xl font-semibold text-slate-100">
-              {dompet.saldo}
+              {saldo}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <button className="rounded-full bg-emerald-400/90 px-3 py-1 text-xs font-semibold text-slate-950 transition hover:bg-emerald-300">
