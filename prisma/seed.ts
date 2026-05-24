@@ -114,11 +114,33 @@ async function main() {
   });
   console.log("✅ User dibuat:", regularUser.email);
 
+  // ─── 5. Buat User Test (Adit) ─────────────────────────────────────────────
+  const aditPassword = await bcrypt.hash("pwadit123", 12);
+  const aditUser = await prisma.user.upsert({
+    where: { email: "adit@gmail.com" },
+    update: {},
+    create: {
+      name: "Adit",
+      email: "adit@gmail.com",
+      password: aditPassword,
+      role: "USER",
+      noHp: "081234000000",
+    },
+  });
+
+  await prisma.dompet.upsert({
+    where: { userId: aditUser.id },
+    update: {},
+    create: { userId: aditUser.id, saldo: 0 },
+  });
+  console.log("✅ User dibuat:", aditUser.email);
+
   console.log("\n🎉 Seeding selesai!");
   console.log("\n📋 Akun tersedia:");
   console.log("  Admin  → admin@voltride.id   | Admin@12345");
   console.log("  Mitra  → mitra@voltride.id   | Mitra@12345");
   console.log("  User   → user@voltride.id    | User@12345");
+  console.log("  User   → adit@gmail.com      | pwadit123");
 }
 
 main()
