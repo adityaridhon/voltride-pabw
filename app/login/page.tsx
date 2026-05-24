@@ -89,20 +89,27 @@ export default function LoginPage() {
         <div className="border-t border-zinc-800 pt-4">
           <p className="text-xs text-zinc-500 mb-2 text-center">Quick fill untuk testing:</p>
           <div className="grid grid-cols-3 gap-2">
-            {[
-              { label: "Admin", email: "admin@voltride.id", pass: "Admin@12345" },
-              { label: "Mitra", email: "mitra@voltride.id", pass: "Mitra@12345" },
-              { label: "User", email: "user@voltride.id", pass: "User@12345" },
-            ].map((acc) => (
-              <button
-                key={acc.label}
-                type="button"
-                onClick={() => { setEmail(acc.email); setPassword(acc.pass); }}
-                className="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg py-2 transition-colors"
-              >
-                {acc.label}
-              </button>
-            ))}
+            <button
+              type="button"
+              onClick={() => router.push("/login/admin")}
+              className="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg py-2 transition-colors"
+            >
+              Admin
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push("/login/mitra")}
+              className="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg py-2 transition-colors"
+            >
+              Mitra
+            </button>
+            <button
+              type="button"
+              onClick={() => { setEmail("user@voltride.id"); setPassword("User@12345"); }}
+              className="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg py-2 transition-colors"
+            >
+              User
+            </button>
           </div>
         </div>
       </div>

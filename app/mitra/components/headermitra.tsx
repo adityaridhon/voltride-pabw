@@ -15,7 +15,7 @@ export default function HeaderMitra({ title = "Dashboard Overview" }: { title?: 
       <div className="flex items-center gap-3">
         <div className="text-right hidden sm:block">
           <p className="text-sm font-semibold text-gray-900 leading-none">Andre</p>
-          <p className="text-xs text-gray-500 mt-1">Admin</p>
+          <p className="text-xs text-gray-500 mt-1">Mitra</p>
         </div>
         <Avatar className="h-9 w-9">
           <AvatarImage src="https://github.com/shadcn.png" alt="@andre" />

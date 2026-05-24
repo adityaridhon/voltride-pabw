@@ -40,7 +40,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             email: true,
             role: true,
             password: true,
-            image: true,
           },
         });
 
@@ -49,12 +48,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const isValid = await bcrypt.compare(password, user.password);
         if (!isValid) return null;
 
-        // Return object sesuai type NextAuth User
         return {
           id: user.id,
           name: user.name,
           email: user.email,
-          image: user.image,
           role: user.role,
         };
       },
