@@ -4,7 +4,7 @@
  */
 
 import "dotenv/config";
-import { PrismaClient } from "../src/generated/prisma";
+import { PrismaClient } from "../src/generated/prisma/index";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import bcrypt from "bcryptjs";
 
@@ -39,7 +39,7 @@ async function main() {
       email: "mitra@voltride.id",
       password: mitraPassword,
       role: "MITRA",
-      noHp: "081234567890",
+      phone: "081234567890",
     },
   });
 
@@ -49,53 +49,49 @@ async function main() {
     update: {},
     create: {
       userId: mitraUser.id,
-      namaMitra: "EV Rental Budi",
-      noHp: "081234567890",
-      alamat: "Jl. Sudirman No. 123, Jakarta",
+      companyName: "EV Rental Budi",
+      phone: "081234567890",
+      address: "Jl. Sudirman No. 123, Jakarta",
     },
   });
 
   // Buat dompet mitra
-  await prisma.dompet.upsert({
-    where: { mitraId: mitra.id },
+  await prisma.wallet.upsert({
+    where: { userId: mitraUser.id },
     update: {},
-    create: { mitraId: mitra.id, saldo: 500000 },
+    create: { userId: mitraUser.id, balance: 500000 },
   });
   console.log("✅ Mitra dibuat:", mitraUser.email);
 
   // ─── 3. Buat Armada ────────────────────────────────────────────────────────
-  const armada1 = await prisma.armada.upsert({
-    where: { nomorPlat: "B 1234 EV" },
+  const armada1 = await prisma.mobil.upsert({
+    where: { plateNumber: "B 1234 EV" },
     update: {},
     create: {
       mitraId: mitra.id,
-      namaKendaraan: "Tesla Model 3",
-      merek: "Tesla",
+      name: "Tesla Model 3",
+      brand: "Tesla",
       model: "Model 3",
-      tahun: 2023,
-      nomorPlat: "B 1234 EV",
-      statusKetersediaan: "TERSEDIA",
-      hargaPerHari: 750000,
-      deskripsi: "Mobil listrik premium dengan jangkauan 500km",
+      plateNumber: "B 1234 EV",
+      status: "ACTIVE",
+      pricePerDay: 750000,
     },
   });
 
-  const armada2 = await prisma.armada.upsert({
-    where: { nomorPlat: "B 5678 EV" },
+  const armada2 = await prisma.mobil.upsert({
+    where: { plateNumber: "B 5678 EV" },
     update: {},
     create: {
       mitraId: mitra.id,
-      namaKendaraan: "BYD Atto 3",
-      merek: "BYD",
+      name: "BYD Atto 3",
+      brand: "BYD",
       model: "Atto 3",
-      tahun: 2024,
-      nomorPlat: "B 5678 EV",
-      statusKetersediaan: "TERSEDIA",
-      hargaPerHari: 500000,
-      deskripsi: "SUV listrik dengan kabin luas dan fitur modern",
+      plateNumber: "B 5678 EV",
+      status: "ACTIVE",
+      pricePerDay: 500000,
     },
   });
-  console.log("✅ Armada dibuat:", armada1.nomorPlat, armada2.nomorPlat);
+  console.log("✅ Armada dibuat:", armada1.plateNumber, armada2.plateNumber);
 
   // ─── 4. Buat User Biasa ────────────────────────────────────────────────────
   const userPassword = await bcrypt.hash("User@12345", 12);
@@ -107,14 +103,14 @@ async function main() {
       email: "user@voltride.id",
       password: userPassword,
       role: "USER",
-      noHp: "089876543210",
+      phone: "089876543210",
     },
   });
 
-  await prisma.dompet.upsert({
+  await prisma.wallet.upsert({
     where: { userId: regularUser.id },
     update: {},
-    create: { userId: regularUser.id, saldo: 1000000 },
+    create: { userId: regularUser.id, balance: 1000000 },
   });
   console.log("✅ User dibuat:", regularUser.email);
 
