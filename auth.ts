@@ -1,7 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
-import { loginSchema } from "@/lib/validations/auth";
 import bcrypt from "bcryptjs";
 import type { Role } from "@/src/generated/prisma";
 
@@ -36,16 +35,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
 
       async authorize(credentials) {
-        const parsed = loginSchema.safeParse(credentials);
+        const email = String(credentials?.email || "")
+          .trim()
+          .toLowerCase();
 
-        if (!parsed.success) {
+        const password = String(credentials?.password || "");
+
+        console.log("=== LOGIN DEBUG ===");
+        console.log("email:", email);
+        console.log("hasPassword:", Boolean(password));
+
+        if (!email || !password) {
+          console.log("LOGIN FAILED: email/password kosong");
           return null;
         }
 
-        const email = parsed.data.email.trim().toLowerCase();
-        const password = parsed.data.password;
-
-        const user = await prisma.user.findUnique({
+        const user = await prisma.user.findFirst({
           where: {
             email,
           },
@@ -58,19 +63,41 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           },
         });
 
+        console.log("userFound:", Boolean(user));
+        console.log("userEmail:", user?.email);
+        console.log("passwordInDbExists:", Boolean(user?.password));
+
         if (!user || !user.password) {
+          console.log("LOGIN FAILED: user tidak ditemukan / password kosong");
           return null;
         }
 
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+        let isPasswordValid = false;
+        const passwordInDb = user.password;
+
+        if (
+          passwordInDb.startsWith("$2a$") ||
+          passwordInDb.startsWith("$2b$") ||
+          passwordInDb.startsWith("$2y$")
+        ) {
+          isPasswordValid = await bcrypt.compare(password, passwordInDb);
+        } else {
+          // Untuk testing kalau password di database masih plain text
+          isPasswordValid = password === passwordInDb;
+        }
+
+        console.log("passwordValid:", isPasswordValid);
 
         if (!isPasswordValid) {
+          console.log("LOGIN FAILED: password salah");
           return null;
         }
 
+        console.log("LOGIN SUCCESS:", user.email);
+
         return {
-          id: user.id,
-          name: user.name,
+          id: String(user.id),
+          name: user.name || user.email,
           email: user.email,
           role: user.role,
         };
