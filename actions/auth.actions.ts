@@ -34,12 +34,12 @@ export async function registerUser(input: RegisterInput) {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword, noHp, role: "USER" },
+      data: { name, email, password: hashedPassword, phone: noHp, role: "USER" },
       select: { id: true, email: true, role: true },
     });
 
     // Buat dompet otomatis
-    await prisma.dompet.create({ data: { userId: user.id } });
+    await prisma.wallet.create({ data: { userId: user.id } });
 
     return user;
   });
@@ -102,14 +102,14 @@ export async function registerMitra(input: RegisterMitraInput) {
     const mitra = await prisma.mitra.create({
       data: {
         userId: user.id,
-        namaMitra,
-        noHp,
-        alamat,
+        companyName: namaMitra,
+        phone: noHp,
+        address: alamat,
       },
     });
 
     // Create wallet for mitra
-    await prisma.dompet.create({ data: { mitraId: mitra.id } });
+    await prisma.wallet.create({ data: { userId: mitra.userId } });
 
     return user;
   });

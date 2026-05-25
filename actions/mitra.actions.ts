@@ -21,7 +21,7 @@ export async function getAllMitra() {
     return prisma.mitra.findMany({
       include: {
         user: { select: { name: true, email: true, role: true } },
-        _count: { select: { armada: true } },
+        _count: { select: { mobils: true } },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -38,8 +38,7 @@ export async function getMitraById(id: string) {
       where: { id },
       include: {
         user: { select: { name: true, email: true } },
-        armada: true,
-        dompet: true,
+        mobils: true,
       },
     });
 
@@ -78,17 +77,17 @@ export async function createMitra(input: CreateMitraInput) {
 
     // Buat profil mitra sekaligus ubah role user menjadi MITRA
     const [mitra] = await prisma.$transaction([
-      prisma.mitra.create({ data: { userId, namaMitra, noHp, alamat } }),
+      prisma.mitra.create({ data: { userId, companyName: namaMitra, phone: noHp, address: alamat } }),
       prisma.user.update({ where: { id: userId }, data: { role: "MITRA" } }),
     ]);
 
-    // Auto-buat dompet jika belum ada
-    const mitraWithDompet = await prisma.mitra.findUnique({
-      where: { id: mitra.id },
-      include: { dompet: true },
+    // Auto-buat wallet jika belum ada
+    const userWithWallet = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { wallet: true },
     });
-    if (!mitraWithDompet?.dompet) {
-      await prisma.dompet.create({ data: { mitraId: mitra.id } });
+    if (!userWithWallet?.wallet) {
+      await prisma.wallet.create({ data: { userId } });
     }
 
     return mitra;
@@ -106,7 +105,7 @@ export async function updateMitra(input: UpdateMitraInput) {
       throw new Error(parsed.error.errors[0].message);
     }
 
-    const { id, ...data } = parsed.data;
+    const { id, namaMitra, noHp, alamat, ...rest } = parsed.data;
 
     const mitra = await prisma.mitra.findUnique({ where: { id } });
     if (!mitra) throw new Error("Mitra tidak ditemukan.");
@@ -118,7 +117,12 @@ export async function updateMitra(input: UpdateMitraInput) {
       );
     }
 
-    return prisma.mitra.update({ where: { id }, data });
+    const updateData: any = {};
+    if (namaMitra) updateData.companyName = namaMitra;
+    if (noHp) updateData.phone = noHp;
+    if (alamat) updateData.address = alamat;
+
+    return prisma.mitra.update({ where: { id }, data: updateData });
   });
 }
 

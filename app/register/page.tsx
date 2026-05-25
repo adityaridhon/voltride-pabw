@@ -4,16 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   registerUser,
-  registerAdmin,
   registerMitra,
 } from "@/actions/auth.actions";
 import type {
   RegisterInput,
-  RegisterAdminInput,
   RegisterMitraInput,
 } from "@/lib/validations/auth";
 
-type Role = "USER" | "ADMIN" | "MITRA";
+type Role = "USER" | "MITRA";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -48,12 +46,6 @@ export default function RegisterPage() {
           confirmPassword,
           noHp,
         } as RegisterInput);
-      } else if (role === "ADMIN") {
-        result = await registerAdmin({
-          email,
-          password,
-          confirmPassword,
-        } as RegisterAdminInput);
       } else if (role === "MITRA") {
         result = await registerMitra({
           email,
@@ -94,12 +86,12 @@ export default function RegisterPage() {
 
         {/* Role Selection Tabs */}
         <div className="flex gap-2 bg-zinc-800 p-1 rounded-lg">
-          {(["USER", "ADMIN", "MITRA"] as const).map((r) => (
+          {(["USER", "MITRA"] as const).map((r) => (
             <button
               key={r}
               type="button"
               onClick={() => {
-                setRole(r);
+                setRole(r as Role);
                 setError("");
                 setSuccess("");
               }}
@@ -112,6 +104,13 @@ export default function RegisterPage() {
               {r === "MITRA" ? "Mitra" : r}
             </button>
           ))}
+        </div>
+
+        {/* Admin Info */}
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3">
+          <p className="text-amber-400 text-xs">
+            ℹ️ Akun admin hanya dapat dibuat oleh administrator. Hubungi admin jika Anda memerlukan akses admin.
+          </p>
         </div>
 
         {error && (
@@ -156,16 +155,6 @@ export default function RegisterPage() {
                 />
               </div>
             </>
-          )}
-
-          {/* ADMIN Role Form */}
-          {role === "ADMIN" && (
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
-              <p className="text-blue-400 text-xs">
-                Pendaftaran admin memerlukan verifikasi tambahan. Hubungi
-                administrator.
-              </p>
-            </div>
           )}
 
           {/* MITRA Role Form */}
