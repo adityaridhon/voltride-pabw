@@ -7,7 +7,10 @@ import {
   updateMitraSchema,
   deleteMitraSchema,
 } from "@/lib/validations/master";
-import type { CreateMitraInput, UpdateMitraInput } from "@/lib/validations/master";
+import type {
+  CreateMitraInput,
+  UpdateMitraInput,
+} from "@/lib/validations/master";
 
 // ─── GET ALL MITRA (Admin & Mitra) ───────────────────────────────────────────
 
@@ -44,7 +47,9 @@ export async function getMitraById(id: string) {
 
     // MITRA hanya bisa lihat data miliknya sendiri
     if (session.user.role === "MITRA" && mitra.userId !== session.user.id) {
-      throw new Error("FORBIDDEN: Anda hanya dapat melihat data mitra Anda sendiri.");
+      throw new Error(
+        "FORBIDDEN: Anda hanya dapat melihat data mitra Anda sendiri.",
+      );
     }
 
     return mitra;
@@ -108,7 +113,9 @@ export async function updateMitra(input: UpdateMitraInput) {
 
     // MITRA hanya bisa update data miliknya
     if (session.user.role === "MITRA" && mitra.userId !== session.user.id) {
-      throw new Error("FORBIDDEN: Anda hanya dapat mengubah data mitra Anda sendiri.");
+      throw new Error(
+        "FORBIDDEN: Anda hanya dapat mengubah data mitra Anda sendiri.",
+      );
     }
 
     return prisma.mitra.update({ where: { id }, data });
@@ -130,7 +137,10 @@ export async function deleteMitra(id: string) {
     // Reset role user kembali ke USER sebelum hapus
     await prisma.$transaction([
       prisma.mitra.delete({ where: { id } }),
-      prisma.user.update({ where: { id: mitra.userId }, data: { role: "USER" } }),
+      prisma.user.update({
+        where: { id: mitra.userId },
+        data: { role: "USER" },
+      }),
     ]);
 
     return { id };
