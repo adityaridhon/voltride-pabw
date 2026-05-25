@@ -1,5 +1,5 @@
 /**
- * Prisma Seed Script — login users only
+ * Prisma Seed Script — Prisma v7 + Neon adapter
  * Jalankan dengan: npm run db:seed
  */
 
@@ -15,7 +15,7 @@ const adapter = new PrismaNeon({
 const prisma = new PrismaClient({ adapter } as never);
 
 async function main() {
-  console.log("🌱 Memulai seeding user login...");
+  console.log("🌱 Memulai seeding...");
 
   const adminPassword = await bcrypt.hash("Admin@12345", 12);
   const mitraPassword = await bcrypt.hash("Mitra@12345", 12);
@@ -38,7 +38,7 @@ async function main() {
     },
   });
 
-  const mitra = await prisma.user.upsert({
+  const mitraUser = await prisma.user.upsert({
     where: { email: "mitra@voltride.id" },
     update: {
       name: "Budi Santoso",
@@ -55,7 +55,7 @@ async function main() {
     },
   });
 
-  const user = await prisma.user.upsert({
+  const regularUser = await prisma.user.upsert({
     where: { email: "user@voltride.id" },
     update: {
       name: "Ani Putri",
@@ -72,26 +72,52 @@ async function main() {
     },
   });
 
-  console.log("✅ User login berhasil dibuat:");
-  console.table([
-    {
-      role: admin.role,
-      email: admin.email,
-      password: "Admin@12345",
+  const mitra = await prisma.mitra.upsert({
+    where: { userId: mitraUser.id },
+    update: {
+      companyName: "EV Rental Budi",
+      phone: "081234567890",
+      address: "Jl. Sudirman No. 123, Jakarta",
     },
-    {
-      role: mitra.role,
-      email: mitra.email,
-      password: "Mitra@12345",
+    create: {
+      userId: mitraUser.id,
+      companyName: "EV Rental Budi",
+      phone: "081234567890",
+      address: "Jl. Sudirman No. 123, Jakarta",
     },
-    {
-      role: user.role,
-      email: user.email,
-      password: "User@12345",
-    },
-  ]);
+  });
 
-  console.log("🎉 Seeding selesai!");
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      phone: true,
+    },
+    orderBy: {
+      email: "asc",
+    },
+  });
+
+  const mitras = await prisma.mitra.findMany({
+    select: {
+      id: true,
+      userId: true,
+      companyName: true,
+      address: true,
+      phone: true,
+    },
+  });
+
+  console.log("\n✅ Users di database:");
+  console.table(users);
+
+  console.log("\n✅ Mitra di database:");
+  console.table(mitras);
+
+  console.log("\n🎉 Seeding selesai.");
+  console.log("Akun testing berhasil dibuat. Password tidak ditampilkan di log.");
 }
 
 main()
