@@ -17,7 +17,7 @@ export async function registerUser(input: RegisterInput) {
       throw new Error(parsed.error.errors[0].message);
     }
 
-    const { name, email, password, noHp } = parsed.data;
+    const { name, email, password, phone } = parsed.data;
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) throw new Error("Email sudah terdaftar.");
@@ -25,12 +25,12 @@ export async function registerUser(input: RegisterInput) {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword, noHp, role: "USER" },
+      data: { name, email, password: hashedPassword, phone, role: "USER" },
       select: { id: true, email: true, role: true },
     });
 
-    // Buat dompet otomatis
-    await prisma.dompet.create({ data: { userId: user.id } });
+    // Buat wallet otomatis
+    await prisma.wallet.create({ data: { userId: user.id } });
 
     return user;
   });

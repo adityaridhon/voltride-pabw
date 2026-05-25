@@ -7,7 +7,10 @@ import {
   updateMitraSchema,
   deleteMitraSchema,
 } from "@/lib/validations/master";
-import type { CreateMitraInput, UpdateMitraInput } from "@/lib/validations/master";
+import type {
+  CreateMitraInput,
+  UpdateMitraInput,
+} from "@/lib/validations/master";
 
 // ─── GET ALL MITRA (Admin & Mitra) ───────────────────────────────────────────
 
@@ -18,7 +21,7 @@ export async function getAllMitra() {
     return prisma.mitra.findMany({
       include: {
         user: { select: { name: true, email: true, role: true } },
-        _count: { select: { armada: true } },
+        _count: { select: { mobils: true } },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -35,8 +38,7 @@ export async function getMitraById(id: string) {
       where: { id },
       include: {
         user: { select: { name: true, email: true } },
-        armada: true,
-        dompet: true,
+        mobils: true,
       },
     });
 
@@ -44,7 +46,9 @@ export async function getMitraById(id: string) {
 
     // MITRA hanya bisa lihat data miliknya sendiri
     if (session.user.role === "MITRA" && mitra.userId !== session.user.id) {
-      throw new Error("FORBIDDEN: Anda hanya dapat melihat data mitra Anda sendiri.");
+      throw new Error(
+        "FORBIDDEN: Anda hanya dapat melihat data mitra Anda sendiri.",
+      );
     }
 
     return mitra;
@@ -73,18 +77,16 @@ export async function createMitra(input: CreateMitraInput) {
 
     // Buat profil mitra sekaligus ubah role user menjadi MITRA
     const [mitra] = await prisma.$transaction([
-      prisma.mitra.create({ data: { userId, namaMitra, noHp, alamat } }),
+      prisma.mitra.create({
+        data: {
+          userId,
+          companyName: namaMitra,
+          phone: noHp,
+          address: alamat,
+        },
+      }),
       prisma.user.update({ where: { id: userId }, data: { role: "MITRA" } }),
     ]);
-
-    // Auto-buat dompet jika belum ada
-    const mitraWithDompet = await prisma.mitra.findUnique({
-      where: { id: mitra.id },
-      include: { dompet: true },
-    });
-    if (!mitraWithDompet?.dompet) {
-      await prisma.dompet.create({ data: { mitraId: mitra.id } });
-    }
 
     return mitra;
   });
@@ -101,17 +103,26 @@ export async function updateMitra(input: UpdateMitraInput) {
       throw new Error(parsed.error.errors[0].message);
     }
 
-    const { id, ...data } = parsed.data;
+    const { id, namaMitra, noHp, alamat } = parsed.data;
 
     const mitra = await prisma.mitra.findUnique({ where: { id } });
     if (!mitra) throw new Error("Mitra tidak ditemukan.");
 
     // MITRA hanya bisa update data miliknya
     if (session.user.role === "MITRA" && mitra.userId !== session.user.id) {
-      throw new Error("FORBIDDEN: Anda hanya dapat mengubah data mitra Anda sendiri.");
+      throw new Error(
+        "FORBIDDEN: Anda hanya dapat mengubah data mitra Anda sendiri.",
+      );
     }
 
-    return prisma.mitra.update({ where: { id }, data });
+    return prisma.mitra.update({
+      where: { id },
+      data: {
+        companyName: namaMitra,
+        phone: noHp,
+        address: alamat,
+      },
+    });
   });
 }
 
@@ -130,7 +141,10 @@ export async function deleteMitra(id: string) {
     // Reset role user kembali ke USER sebelum hapus
     await prisma.$transaction([
       prisma.mitra.delete({ where: { id } }),
-      prisma.user.update({ where: { id: mitra.userId }, data: { role: "USER" } }),
+      prisma.user.update({
+        where: { id: mitra.userId },
+        data: { role: "USER" },
+      }),
     ]);
 
     return { id };

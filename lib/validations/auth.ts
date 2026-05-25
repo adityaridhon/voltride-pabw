@@ -11,7 +11,7 @@ export const registerSchema = z
     email: z.string().email("Format email tidak valid"),
     password: z.string().min(8, "Password minimal 8 karakter"),
     confirmPassword: z.string(),
-    noHp: z.string().optional(),
+    phone: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Konfirmasi password tidak cocok",

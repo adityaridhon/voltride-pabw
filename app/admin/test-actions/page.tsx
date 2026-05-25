@@ -21,10 +21,19 @@ export default async function TestActionsPage() {
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white">🧪 Test Server Actions</h1>
-            <p className="text-zinc-500 text-sm mt-1">Hasil pemanggilan getUsers(), getAllMitra(), getAllArmada()</p>
+            <h1 className="text-2xl font-bold text-white">
+              🧪 Test Server Actions
+            </h1>
+            <p className="text-zinc-500 text-sm mt-1">
+              Hasil pemanggilan getUsers(), getAllMitra(), getAllArmada()
+            </p>
           </div>
-          <Link href="/admin/dashboard" className="text-sm text-zinc-400 hover:text-white transition-colors">← Admin</Link>
+          <Link
+            href="/admin/dashboard"
+            className="text-sm text-zinc-400 hover:text-white transition-colors"
+          >
+            ← Admin
+          </Link>
         </div>
 
         {/* Users */}
@@ -54,22 +63,28 @@ export default async function TestActionsPage() {
         </Section>
 
         {/* Mitra */}
-        <Section title="getAllMitra()" badge="ADMIN + MITRA" result={mitraResult}>
+        <Section
+          title="getAllMitra()"
+          badge="ADMIN + MITRA"
+          result={mitraResult}
+        >
           {mitraResult.success && (
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-zinc-500 border-b border-zinc-800">
                   <th className="pb-2 font-medium">Nama Mitra</th>
-                  <th className="pb-2 font-medium">Jumlah Armada</th>
+                  <th className="pb-2 font-medium">Jumlah Mobil</th>
                   <th className="pb-2 font-medium">No. HP</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800">
                 {mitraResult.data.map((m) => (
                   <tr key={m.id}>
-                    <td className="py-2 text-zinc-300">{m.namaMitra}</td>
-                    <td className="py-2 text-zinc-400">{m._count.armada} unit</td>
-                    <td className="py-2 text-zinc-400">{m.noHp ?? "—"}</td>
+                    <td className="py-2 text-zinc-300">{m.companyName}</td>
+                    <td className="py-2 text-zinc-400">
+                      {m._count.mobils} unit
+                    </td>
+                    <td className="py-2 text-zinc-400">{m.phone ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -78,7 +93,11 @@ export default async function TestActionsPage() {
         </Section>
 
         {/* Armada */}
-        <Section title="getAllArmada()" badge="Semua role" result={armadaResult}>
+        <Section
+          title="getAllArmada()"
+          badge="Semua role"
+          result={armadaResult}
+        >
           {armadaResult.success && (
             <table className="w-full text-sm">
               <thead>
@@ -92,16 +111,18 @@ export default async function TestActionsPage() {
               <tbody className="divide-y divide-zinc-800">
                 {armadaResult.data.map((a) => (
                   <tr key={a.id}>
-                    <td className="py-2 text-zinc-300">{a.namaKendaraan}</td>
+                    <td className="py-2 text-zinc-300">{a.name}</td>
                     <td className="py-2">
-                      <code className="text-xs bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded">{a.nomorPlat}</code>
+                      <code className="text-xs bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded">
+                        {a.plateNumber}
+                      </code>
                     </td>
                     <td className="py-2 text-zinc-400">
-                      Rp {Number(a.hargaPerHari).toLocaleString("id-ID")}
+                      Rp {Number(a.pricePerDay).toLocaleString("id-ID")}
                     </td>
                     <td className="py-2">
                       <span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">
-                        {a.statusKetersediaan}
+                        {a.status}
                       </span>
                     </td>
                   </tr>
@@ -113,9 +134,15 @@ export default async function TestActionsPage() {
 
         {/* Raw JSON dump */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-3">
-          <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Raw ActionResponse</h2>
+          <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">
+            Raw ActionResponse
+          </h2>
           <pre className="text-xs text-zinc-400 overflow-auto max-h-60 bg-zinc-950 rounded-lg p-4">
-            {JSON.stringify({ usersResult, mitraResult, armadaResult }, null, 2)}
+            {JSON.stringify(
+              { usersResult, mitraResult, armadaResult },
+              null,
+              2,
+            )}
           </pre>
         </div>
       </div>
@@ -138,8 +165,12 @@ function Section({
     <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
       <div className="flex items-center gap-3">
         <code className="text-white font-mono text-sm">{title}</code>
-        <span className="text-xs bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full">{badge}</span>
-        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ml-auto ${result.success ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
+        <span className="text-xs bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full">
+          {badge}
+        </span>
+        <span
+          className={`text-xs font-medium px-2 py-0.5 rounded-full ml-auto ${result.success ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}
+        >
           {result.success ? "✓ success: true" : `✗ ${result.error}`}
         </span>
       </div>
@@ -155,7 +186,9 @@ function RoleBadge({ role }: { role: string }) {
     USER: "bg-emerald-500/20 text-emerald-400",
   };
   return (
-    <span className={`text-xs px-2 py-0.5 rounded-full ${colors[role] ?? "bg-zinc-700 text-zinc-300"}`}>
+    <span
+      className={`text-xs px-2 py-0.5 rounded-full ${colors[role] ?? "bg-zinc-700 text-zinc-300"}`}
+    >
       {role}
     </span>
   );

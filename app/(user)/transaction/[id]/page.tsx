@@ -10,41 +10,6 @@ const detailRows = [
   { label: "Status", value: "Sukses" },
 ];
 
-// insya allah  DETAIL TRANSAKSI
-// ========================================
-
-// 1. Dynamic transaction data
-// - Ambil data transaksi berdasarkan params.id
-// - Fetch dari database/API
-
-// 2. Transaction status
-// - Status berhasil
-// - Pending
-// - Gagal
-// - Expired
-
-// 3. Download receipt PDF
-// - Generate bukti transaksi PDF
-// - Export invoice
-
-// 4. Share transaction
-// - Share bukti transaksi
-// - Copy transaction ID
-
-// 5. Transaction timeline
-// - Waktu dibuat
-// - Diproses
-// - Berhasil
-
-// 6. User detail
-// - Nama pengirim
-// - Nama penerima
-// - Nomor wallet
-
-// 7. Payment detail
-// - Metode pembayaran
-// - Admin fee
-// - Total transaksi
 
 
 

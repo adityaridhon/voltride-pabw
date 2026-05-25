@@ -1,69 +1,101 @@
-const quickStats = [
-  {
-    label: "Saldo tersedia",
-    value: "Rp 2.450.000",
-    note: "+12% dari bulan lalu",
-  },
-  { label: "Poin perjalanan", value: "1.240", note: "Tukar untuk diskon" },
-  { label: "Transaksi bulan ini", value: "28", note: "2 transaksi tertunda" },
-];
+import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth-guard";
+import {
+  getCurrentUserWallet,
+  getRecentTransactions,
+} from "@/actions/user.actions";
 
-const recentTransactions = [
-  {
-    title: "Top Up Instan",
-    time: "10:24",
-    amount: "+Rp 300.000",
-    status: "Sukses",
-  },
-  {
-    title: "Tarik dana ke BCA",
-    time: "Kemarin",
-    amount: "-Rp 150.000",
-    status: "Diproses",
-  },
-  {
-    title: "Transfer ke Dewa Putra",
-    time: "09 Mei",
-    amount: "-Rp 75.000",
-    status: "Sukses",
-  },
-  {
-    title: "Cashback perjalanan",
-    time: "09 Mei",
-    amount: "+Rp 25.000",
-    status: "Sukses",
-  },
-];
+const formatRupiah = (value: number) =>
+  new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  })
+    .format(value)
+    .replace("Rp", "Rp ");
 
-const goals = [
-  { label: "Dana perjalanan", progress: 64 },
-  { label: "Dana darurat", progress: 48 },
-  { label: "Upgrade paket", progress: 82 },
-];
+const formatDateLabel = (value: Date) =>
+  new Intl.DateTimeFormat("id-ID", {
+    day: "2-digit",
+    month: "short",
+  }).format(value);
 
-export default function DashboardPage() {
+const statusLabelMap: Record<string, string> = {
+  SUCCESS: "Sukses",
+  PENDING: "Diproses",
+  FAILED: "Gagal",
+};
+
+export default async function DashboardPage() {
+  const session = await requireAuth();
+  const user = session.user!;
+  const { wallet } = await getCurrentUserWallet();
+  const recentTransactions = await getRecentTransactions(4);
+
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+
+  const [monthlyTransactionCount, totalTransactionCount] =
+    await prisma.$transaction([
+      prisma.transaction.count({
+        where: {
+          walletId: wallet.id,
+          createdAt: { gte: monthStart },
+        },
+      }),
+      prisma.transaction.count({
+        where: { walletId: wallet.id },
+      }),
+    ]);
+
+  const quickStats = [
+    {
+      label: "Saldo tersedia",
+      value: formatRupiah(Number(wallet.balance ?? 0)),
+      note: "Saldo terakhir dari database",
+    },
+    {
+      label: "Transaksi bulan ini",
+      value: monthlyTransactionCount.toString(),
+      note: "Dihitung dari transaksi sukses/pending",
+    },
+    {
+      label: "Total transaksi",
+      value: totalTransactionCount.toString(),
+      note: "Semua aktivitas dompet",
+    },
+  ];
+
   return (
     <section className="space-y-6">
       <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-emerald-300/80">
+          <p className="text-xs uppercase tracking-[0.2em] text-emerald-500">
             Ringkasan Dompet
           </p>
-          <h1 className="mt-2 font-heading text-3xl font-semibold">
-            Selamat datang kembali, Raka
+          <h1 className="mt-2 text-3xl font-semibold text-zinc-900">
+            Selamat datang kembali, {user.name ?? "Pengguna"}
           </h1>
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-zinc-500">
             Pantau saldo, transaksi, dan target finansial perjalanan kamu di
             satu tempat.
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button className="rounded-full border border-slate-700/80 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500">
-            Unduh laporan
-          </button>
-          <button className="rounded-full bg-emerald-400/90 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300">
-            Buat target baru
-          </button>
+          <Link
+            href="/profile"
+            className="rounded-full border border-zinc-200 px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300"
+          >
+            Profil
+          </Link>
+          <Link
+            href="/topup"
+            className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600"
+          >
+            Top up
+          </Link>
         </div>
       </header>
 
@@ -71,74 +103,61 @@ export default function DashboardPage() {
         {quickStats.map((item, index) => (
           <div
             key={item.label}
-            className="wallet-fade-in rounded-2xl border border-slate-800/80 bg-slate-950/40 p-5"
+            className="wallet-fade-in rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm"
             style={{ animationDelay: `${index * 120}ms` }}
           >
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+            <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">
               {item.label}
             </p>
-            <p className="mt-3 text-2xl font-semibold">{item.value}</p>
-            <p className="mt-2 text-xs text-slate-400">{item.note}</p>
+            <p className="mt-3 text-2xl font-semibold text-zinc-900">
+              {item.value}
+            </p>
+            <p className="mt-2 text-xs text-zinc-500">{item.note}</p>
           </div>
         ))}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-5">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <h2 className="font-heading text-lg">Aktivitas terbaru</h2>
-            <button className="text-xs text-emerald-300/80 transition hover:text-emerald-200">
+            <h2 className="text-lg font-semibold text-zinc-900">
+              Aktivitas terbaru
+            </h2>
+            <Link
+              href="/history"
+              className="text-xs text-emerald-600 transition hover:text-emerald-700"
+            >
               Lihat semua
-            </button>
+            </Link>
           </div>
           <div className="mt-4 space-y-3">
-            {recentTransactions.map((item) => (
-              <div
-                key={item.title}
-                className="flex items-center justify-between rounded-xl border border-slate-800/60 bg-slate-900/50 px-4 py-3"
-              >
-                <div>
-                  <p className="text-sm font-semibold text-slate-100">
-                    {item.title}
-                  </p>
-                  <p className="text-xs text-slate-400">
-                    {item.time} · {item.status}
-                  </p>
-                </div>
-                <span className="text-sm font-semibold text-emerald-200">
-                  {item.amount}
-                </span>
+            {recentTransactions.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-4 py-6 text-center text-sm text-zinc-500">
+                Belum ada transaksi. Mulai top up untuk menambah saldo.
               </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-5">
-          <div className="flex items-center justify-between">
-            <h2 className="font-heading text-lg">Target bulan ini</h2>
-            <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs text-emerald-200">
-              Rp 1.200.000 terkumpul
-            </span>
-          </div>
-          <div className="mt-4 space-y-4">
-            {goals.map((goal) => (
-              <div key={goal.label}>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-200">{goal.label}</span>
-                  <span className="text-slate-400">{goal.progress}%</span>
+            ) : (
+              recentTransactions.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-4 py-3"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-zinc-900">
+                      {item.description ?? "Transaksi dompet"}
+                    </p>
+                    <p className="text-xs text-zinc-500">
+                      {formatDateLabel(item.createdAt)} ·{" "}
+                      {statusLabelMap[item.status]}
+                    </p>
+                  </div>
+                  <span className="text-sm font-semibold text-emerald-600">
+                    {item.direction === "CREDIT" ? "+" : "-"}
+                    {formatRupiah(Number(item.amount))}
+                  </span>
                 </div>
-                <div className="mt-2 h-2 rounded-full bg-slate-800">
-                  <div
-                    className="h-2 rounded-full bg-gradient-to-r from-emerald-400 via-emerald-300 to-cyan-300"
-                    style={{ width: `${goal.progress}%` }}
-                  />
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
-          <button className="mt-5 w-full rounded-full border border-slate-700/80 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500">
-            Kelola target
-          </button>
         </div>
       </div>
     </section>
