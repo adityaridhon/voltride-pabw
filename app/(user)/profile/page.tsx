@@ -1,109 +1,69 @@
-import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth-guard";
 
-const pemesanan = [
-  {
-    id_pemesanan: "VB-2305",
-    id_pengguna: 128,
-    id_mobil: "EV-210",
-    tanggal_sewa: "12 Mei 2026",
-    tanggal_selesai: "14 Mei 2026",
-    total_harga: "Rp 520.000",
-    status_pemesanan: "Selesai",
-    mobil: "Wuling Air EV",
-  },
-  {
-    id_pemesanan: "VB-2291",
-    id_pengguna: 128,
-    id_mobil: "EV-305",
-    tanggal_sewa: "08 Mei 2026",
-    tanggal_selesai: "10 Mei 2026",
-    total_harga: "Rp 1.200.000",
-    status_pemesanan: "Berjalan",
-    mobil: "Hyundai Ioniq 5",
-  },
-  {
-    id_pemesanan: "VB-2276",
-    id_pengguna: 128,
-    id_mobil: "EV-144",
-    tanggal_sewa: "01 Mei 2026",
-    tanggal_selesai: "02 Mei 2026",
-    total_harga: "Rp 310.000",
-    status_pemesanan: "Selesai",
-    mobil: "Nissan Leaf",
-  },
-];
-
-const mobilListrik = [
-  {
-    id_mobil: "EV-305",
-    id_mitra: "MT-09",
-    tipe_mobil: "Hyundai Ioniq 5",
-    status_ketersediaan: "Tersedia",
-    warna: "Putih",
-    plat: "B 1987 EV",
-  },
-  {
-    id_mobil: "EV-210",
-    id_mitra: "MT-04",
-    tipe_mobil: "Wuling Air EV",
-    status_ketersediaan: "Terjadwal",
-    warna: "Biru",
-    plat: "D 2210 EV",
-  },
-  {
-    id_mobil: "EV-144",
-    id_mitra: "MT-02",
-    tipe_mobil: "Nissan Leaf",
-    status_ketersediaan: "Tersedia",
-    warna: "Hitam",
-    plat: "B 4431 EV",
-  },
-];
-
-const methods = [
-  { name: "BCA Virtual Account", info: "Aktif · Berakhir 09/28" },
-  { name: "Kartu Debit BNI", info: "Aktif · Berakhir 03/27" },
-  { name: "E-Wallet OVO", info: "Terhubung" },
-];
-
-function formatRupiah(value: number) {
-  return new Intl.NumberFormat("id-ID", {
+const formatRupiah = (value: number) =>
+  new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
-    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  })
+    .format(value)
+    .replace("Rp", "Rp ");
+
+const formatDate = (value: Date) =>
+  new Intl.DateTimeFormat("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
   }).format(value);
-}
 
 export default async function ProfilePage() {
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/login");
-  }
+  const session = await requireAuth();
+  const userId = session.user!.id;
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      name: true,
-      email: true,
-      noHp: true,
-      dompet: { select: { saldo: true } },
+  const [user, wallet, bookings] = await prisma.$transaction([
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, email: true, phone: true },
+    }),
+    prisma.wallet.findUnique({
+      where: { userId },
+      select: { id: true, balance: true },
+    }),
+    prisma.booking.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      take: 3,
+      include: { mobil: true },
+    }),
+  ]);
+
+  const activeBookingCount = await prisma.booking.count({
+    where: {
+      userId,
+      status: { in: ["PENDING", "PAID"] },
     },
   });
 
-  const saldo = formatRupiah(Number(user?.dompet?.saldo ?? 0));
+  const balance = Number(wallet?.balance ?? 0);
+
+  const transactionCount = wallet
+    ? await prisma.transaction.count({
+        where: { walletId: wallet.id },
+      })
+    : 0;
 
   return (
     <section className="space-y-6">
       <header>
-        <p className="text-xs uppercase tracking-[0.2em] text-emerald-300/80">
+        <p className="text-xs uppercase tracking-[0.2em] text-emerald-500">
           Profil pengguna
         </p>
-        <h1 className="mt-2 font-heading text-3xl font-semibold">
+        <h1 className="mt-2 text-3xl font-semibold text-zinc-900">
           Ringkasan akun dan aktivitas
         </h1>
-        <p className="mt-2 text-sm text-slate-400">
+        <p className="mt-2 text-sm text-zinc-500">
           Pantau saldo, pemesanan, dan informasi akun kamu di satu tempat.
         </p>
       </header>
@@ -112,234 +72,174 @@ export default async function ProfilePage() {
         {[
           {
             label: "Saldo dompet",
-            value: saldo,
+            value: formatRupiah(balance),
             note: "Siap dipakai",
           },
           {
             label: "Pemesanan aktif",
-            value: "2",
+            value: activeBookingCount.toString(),
             note: "Sedang berjalan",
           },
           {
             label: "Transaksi bulan ini",
-            value: "14",
-            note: "2 tertunda",
+            value: transactionCount.toString(),
+            note: "Total transaksi dompet",
           },
         ].map((item) => (
           <div
             key={item.label}
-            className="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-5"
+            className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm"
           >
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+            <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">
               {item.label}
             </p>
-            <p className="mt-3 text-2xl font-semibold text-slate-100">
+            <p className="mt-3 text-2xl font-semibold text-zinc-900">
               {item.value}
             </p>
-            <p className="mt-2 text-xs text-slate-400">{item.note}</p>
+            <p className="mt-2 text-xs text-zinc-500">{item.note}</p>
           </div>
         ))}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.15fr_1fr]">
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-5">
-          <h2 className="font-heading text-lg">Edit profil</h2>
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+          <h2 className="text-lg font-semibold text-zinc-900">Edit profil</h2>
           <div className="mt-4 grid gap-4">
             <div>
-              <label className="text-xs uppercase tracking-[0.2em] text-slate-500">
+              <label className="text-xs uppercase tracking-[0.2em] text-zinc-400">
                 Nama lengkap
               </label>
               <input
                 type="text"
                 defaultValue={user?.name ?? ""}
-                className="mt-3 w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500"
+                className="mt-3 w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-700 placeholder:text-zinc-400"
               />
             </div>
             <div>
-              <label className="text-xs uppercase tracking-[0.2em] text-slate-500">
+              <label className="text-xs uppercase tracking-[0.2em] text-zinc-400">
                 Email
               </label>
               <input
                 type="email"
                 defaultValue={user?.email ?? ""}
-                className="mt-3 w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500"
+                className="mt-3 w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-700 placeholder:text-zinc-400"
               />
             </div>
             <div>
-              <label className="text-xs uppercase tracking-[0.2em] text-slate-500">
+              <label className="text-xs uppercase tracking-[0.2em] text-zinc-400">
                 Nomor HP
               </label>
               <input
                 type="tel"
-                defaultValue={user?.noHp ?? ""}
-                className="mt-3 w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500"
+                defaultValue={user?.phone ?? ""}
+                className="mt-3 w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-700 placeholder:text-zinc-400"
               />
             </div>
           </div>
-          <button className="mt-5 w-full rounded-full bg-emerald-400/90 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300">
+          <button className="mt-5 w-full rounded-full bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600">
             Simpan perubahan
           </button>
         </div>
 
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-5">
-          <h2 className="font-heading text-lg">Dompet & preferensi</h2>
-          <div className="mt-4 rounded-2xl border border-slate-800/60 bg-slate-900/60 p-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+          <h2 className="text-lg font-semibold text-zinc-900">
+            Dompet & preferensi
+          </h2>
+          <div className="mt-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+            <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">
               Saldo aktif
             </p>
-            <p className="mt-2 text-2xl font-semibold text-slate-100">
-              {saldo}
+            <p className="mt-2 text-2xl font-semibold text-zinc-900">
+              {formatRupiah(balance)}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <button className="rounded-full bg-emerald-400/90 px-3 py-1 text-xs font-semibold text-slate-950 transition hover:bg-emerald-300">
+              <Link
+                href="/topup"
+                className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-semibold text-white transition hover:bg-emerald-600"
+              >
                 Top up
-              </button>
-              <button className="rounded-full border border-slate-700/80 px-3 py-1 text-xs font-semibold text-slate-200 transition hover:border-slate-500">
+              </Link>
+              <Link
+                href="/withdraw"
+                className="rounded-full border border-zinc-200 px-3 py-1 text-xs font-semibold text-zinc-700 transition hover:border-zinc-300"
+              >
                 Tarik dana
-              </button>
+              </Link>
             </div>
           </div>
-          <div className="mt-4 space-y-3">
-            {["Update transaksi", "Promo perjalanan", "Reminder top up"].map(
-              (item) => (
-                <div
-                  key={item}
-                  className="flex items-center justify-between rounded-xl border border-slate-800/60 bg-slate-900/60 px-4 py-3"
-                >
-                  <span className="text-sm text-slate-200">{item}</span>
-                  <button className="rounded-full border border-slate-700/80 px-3 py-1 text-xs font-semibold text-slate-200 transition hover:border-slate-500">
-                    Aktif
-                  </button>
-                </div>
-              ),
-            )}
-          </div>
-          <div className="mt-5 rounded-2xl border border-slate-800/60 bg-slate-900/60 p-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+          <div className="mt-5 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+            <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">
               Zona waktu
             </p>
-            <p className="mt-2 text-sm text-slate-200">GMT+7 (WIB)</p>
+            <p className="mt-2 text-sm text-zinc-600">GMT+7 (WIB)</p>
           </div>
         </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-5">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <h2 className="font-heading text-lg">Riwayat pemesanan</h2>
-            <button className="text-xs text-emerald-300/80 transition hover:text-emerald-200">
+            <h2 className="text-lg font-semibold text-zinc-900">
+              Riwayat pemesanan
+            </h2>
+            <Link
+              href="/history"
+              className="text-xs text-emerald-600 transition hover:text-emerald-700"
+            >
               Lihat semua
-            </button>
+            </Link>
           </div>
           <div className="mt-4 space-y-3">
-            {pemesanan.map((item) => (
-              <div
-                key={item.id_pemesanan}
-                className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-4"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-100">
-                      {item.mobil}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      {item.tanggal_sewa} - {item.tanggal_selesai} ·{" "}
-                      {item.id_pemesanan}
-                    </p>
+            {bookings.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-4 py-6 text-center text-sm text-zinc-500">
+                Belum ada pemesanan.
+              </div>
+            ) : (
+              bookings.map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-2xl border border-zinc-200 bg-white px-4 py-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-zinc-900">
+                        {item.mobil?.name ?? "Mobil listrik"}
+                      </p>
+                      <p className="mt-1 text-xs text-zinc-500">
+                        {formatDate(item.startDate)} -{" "}
+                        {formatDate(item.endDate)}
+                      </p>
+                    </div>
+                    <span className="text-sm font-semibold text-emerald-600">
+                      {formatRupiah(Number(item.totalPrice))}
+                    </span>
                   </div>
-                  <span className="text-sm font-semibold text-emerald-200">
-                    {item.total_harga}
-                  </span>
-                </div>
-                <p className="mt-2 text-xs text-slate-300">
-                  Status: {item.status_pemesanan}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-5">
-          <h2 className="font-heading text-lg">Daftar mobil listrik</h2>
-          <div className="mt-4 space-y-3">
-            {mobilListrik.map((car) => (
-              <div
-                key={car.id_mobil}
-                className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-4"
-              >
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-slate-100">
-                    {car.tipe_mobil}
+                  <p className="mt-2 text-xs text-zinc-500">
+                    Status: {item.status}
                   </p>
-                  <span className="rounded-full border border-slate-700/80 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-slate-300">
-                    {car.id_mitra}
-                  </span>
                 </div>
-                <p className="mt-1 text-xs text-slate-400">
-                  {car.warna} · {car.plat}
-                </p>
-                <p className="mt-2 text-xs text-emerald-200">
-                  {car.status_ketersediaan}
-                </p>
-              </div>
-            ))}
+              ))
+            )}
           </div>
-          <button className="mt-4 w-full rounded-full border border-slate-700/80 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500">
-            Lihat ketersediaan
-          </button>
         </div>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-5">
-          <h2 className="font-heading text-lg">Metode pembayaran</h2>
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+          <h2 className="text-lg font-semibold text-zinc-900">Akses cepat</h2>
           <div className="mt-4 space-y-3">
-            {methods.map((method) => (
-              <div
-                key={method.name}
-                className="flex items-center justify-between rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-4"
-              >
-                <div>
-                  <p className="text-sm font-semibold text-slate-100">
-                    {method.name}
-                  </p>
-                  <p className="text-xs text-slate-400">{method.info}</p>
-                </div>
-                <button className="rounded-full border border-slate-700/80 px-3 py-1 text-xs font-semibold text-slate-200 transition hover:border-slate-500">
-                  Kelola
-                </button>
-              </div>
-            ))}
+            <Link
+              href="/wallet"
+              className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white px-4 py-4 text-sm text-zinc-700"
+            >
+              Lihat dompet
+              <span className="text-emerald-600">{formatRupiah(balance)}</span>
+            </Link>
+            <Link
+              href="/history"
+              className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white px-4 py-4 text-sm text-zinc-700"
+            >
+              Riwayat transaksi
+              <span className="text-emerald-600">{transactionCount}</span>
+            </Link>
           </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-5">
-          <h2 className="font-heading text-lg">Tambah metode baru</h2>
-          <div className="mt-4 space-y-4">
-            <div>
-              <label className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                Nama metode
-              </label>
-              <input
-                type="text"
-                placeholder="Contoh: Kartu debit"
-                className="mt-3 w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500"
-              />
-            </div>
-            <div>
-              <label className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                Nomor
-              </label>
-              <input
-                type="text"
-                placeholder="Masukkan nomor kartu atau VA"
-                className="mt-3 w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500"
-              />
-            </div>
-          </div>
-          <button className="mt-5 w-full rounded-full bg-emerald-400/90 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300">
-            Simpan metode
-          </button>
         </div>
       </div>
     </section>

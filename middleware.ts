@@ -13,12 +13,13 @@ const PROTECTED_ROUTES: Record<string, string[]> = {
   "/profile": ["ADMIN", "MITRA", "USER"],
   "/wallet": ["ADMIN", "MITRA", "USER"],
   "/topup": ["ADMIN", "MITRA", "USER"],
+  "/history": ["ADMIN", "MITRA", "USER"],
+  "/transaction": ["ADMIN", "MITRA", "USER"],
   "/transfer": ["ADMIN", "MITRA", "USER"],
   "/withdraw": ["ADMIN", "MITRA", "USER"],
-  "/history": ["ADMIN", "MITRA", "USER"],
   "/payment-method": ["ADMIN", "MITRA", "USER"],
-  "/notifications": ["ADMIN", "MITRA", "USER"],
   "/security": ["ADMIN", "MITRA", "USER"],
+  "/notifications": ["ADMIN", "MITRA", "USER"],
 };
 
 /** Route yang hanya bisa diakses oleh tamu (belum login) */

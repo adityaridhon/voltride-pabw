@@ -26,7 +26,7 @@ export async function registerUser(input: RegisterInput) {
       throw new Error(parsed.error.errors[0].message);
     }
 
-    const { name, email, password, noHp } = parsed.data;
+    const { name, email, password, phone } = parsed.data;
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) throw new Error("Email sudah terdaftar.");
@@ -34,7 +34,7 @@ export async function registerUser(input: RegisterInput) {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword, phone: noHp, role: "USER" },
+      data: { name, email, password: hashedPassword, phone, role: "USER" },
       select: { id: true, email: true, role: true },
     });
 
@@ -87,7 +87,6 @@ export async function registerMitra(input: RegisterMitraInput) {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user first, then mitra profile with correct userId
     const user = await prisma.user.create({
       data: {
         name: namaMitra,
@@ -98,7 +97,6 @@ export async function registerMitra(input: RegisterMitraInput) {
       select: { id: true, email: true, role: true },
     });
 
-    // Create mitra profile with user id
     const mitra = await prisma.mitra.create({
       data: {
         userId: user.id,
@@ -108,7 +106,6 @@ export async function registerMitra(input: RegisterMitraInput) {
       },
     });
 
-    // Create wallet for mitra
     await prisma.wallet.create({ data: { userId: mitra.userId } });
 
     return user;
