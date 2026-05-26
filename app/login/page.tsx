@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -27,7 +27,14 @@ export default function LoginPage() {
     if (res?.error) {
       setError("Email atau password salah.");
     } else {
-      router.push("/dashboard");
+      const session = await getSession();
+      if (session?.user?.role === "ADMIN") {
+        router.push("/admin/dashboard");
+      } else if (session?.user?.role === "MITRA") {
+        router.push("/mitra/dashboard");
+      } else {
+        router.push("/dashboard");
+      }
       router.refresh();
     }
   }
@@ -80,23 +87,45 @@ export default function LoginPage() {
 
         {/* Quick fill untuk testing */}
         <div className="border-t border-zinc-800 pt-4">
-          <p className="text-xs text-zinc-500 mb-2 text-center">Quick fill untuk testing:</p>
+          <p className="text-xs text-zinc-500 mb-2 text-center">
+            Quick fill untuk testing:
+          </p>
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: "Admin", email: "admin@voltride.id", pass: "Admin@12345" },
-              { label: "Mitra", email: "mitra@voltride.id", pass: "Mitra@12345" },
+              {
+                label: "Admin",
+                email: "admin@voltride.id",
+                pass: "Admin@12345",
+              },
+              {
+                label: "Mitra",
+                email: "mitra@voltride.id",
+                pass: "Mitra@12345",
+              },
               { label: "User", email: "user@voltride.id", pass: "User@12345" },
             ].map((acc) => (
               <button
                 key={acc.label}
                 type="button"
-                onClick={() => { setEmail(acc.email); setPassword(acc.pass); }}
+                onClick={() => {
+                  setEmail(acc.email);
+                  setPassword(acc.pass);
+                }}
                 className="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg py-2 transition-colors"
               >
                 {acc.label}
               </button>
             ))}
           </div>
+          <p className="text-xs text-zinc-500 text-center mt-3">
+            Belum punya akun?{" "}
+            <a
+              href="/register"
+              className="text-emerald-500 hover:text-emerald-400 font-medium"
+            >
+              Daftar di sini
+            </a>
+          </p>
         </div>
       </div>
     </div>

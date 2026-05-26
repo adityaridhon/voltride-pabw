@@ -7,10 +7,7 @@ import {
   updateArmadaSchema,
   deleteArmadaSchema,
 } from "@/lib/validations/master";
-import type {
-  CreateArmadaInput,
-  UpdateArmadaInput,
-} from "@/lib/validations/master";
+import type { CreateArmadaInput, UpdateArmadaInput } from "@/lib/validations/master";
 
 // ─── GET ALL ARMADA ───────────────────────────────────────────────────────────
 
@@ -23,8 +20,8 @@ export async function getAllArmada(mitraId?: string) {
         ? // MITRA hanya lihat armada miliknya
           { mitra: { userId: session.user.id } }
         : mitraId
-          ? { mitraId }
-          : {};
+        ? { mitraId }
+        : {};
 
     return prisma.mobil.findMany({
       where: whereClause,
@@ -74,7 +71,7 @@ export async function createArmada(input: CreateArmadaInput) {
       throw new Error(parsed.error.errors[0].message);
     }
 
-    const { mitraId, hargaPerHari, ...rest } = parsed.data;
+    const { mitraId, hargaPerHari, namaKendaraan, merek, model, tahun, nomorPlat, statusKetersediaan, foto, deskripsi } = parsed.data;
 
     // Pastikan mitra ada
     const mitra = await prisma.mitra.findUnique({ where: { id: mitraId } });
@@ -82,34 +79,25 @@ export async function createArmada(input: CreateArmadaInput) {
 
     // MITRA hanya bisa tambah armada ke mitra miliknya
     if (session.user.role === "MITRA" && mitra.userId !== session.user.id) {
-      throw new Error(
-        "FORBIDDEN: Anda hanya dapat menambah armada untuk mitra Anda sendiri.",
-      );
+      throw new Error("FORBIDDEN: Anda hanya dapat menambah armada untuk mitra Anda sendiri.");
     }
 
     // Cek nomor plat sudah ada
     const existing = await prisma.mobil.findUnique({
-      where: { plateNumber: rest.nomorPlat },
+      where: { plateNumber: nomorPlat },
     });
-    if (existing)
-      throw new Error(`Nomor plat '${rest.nomorPlat}' sudah terdaftar.`);
-
-    const statusMap: Record<string, "ACTIVE" | "INACTIVE" | "MAINTENANCE"> = {
-      TERSEDIA: "ACTIVE",
-      DISEWA: "INACTIVE",
-      PERAWATAN: "MAINTENANCE",
-    };
+    if (existing) throw new Error(`Nomor plat '${nomorPlat}' sudah terdaftar.`);
 
     return prisma.mobil.create({
       data: {
         mitraId,
-        name: rest.namaKendaraan,
-        brand: rest.merek,
-        model: rest.model,
-        plateNumber: rest.nomorPlat,
+        name: namaKendaraan,
+        brand: merek,
+        model,
+        plateNumber: nomorPlat,
         pricePerDay: hargaPerHari,
-        imageUrl: rest.foto,
-        status: statusMap[rest.statusKetersediaan ?? "TERSEDIA"],
+        status: (statusKetersediaan === "TERSEDIA" ? "ACTIVE" : statusKetersediaan === "DISEWA" ? "INACTIVE" : "MAINTENANCE") as any,
+        imageUrl: foto,
       },
     });
   });
@@ -126,7 +114,7 @@ export async function updateArmada(input: UpdateArmadaInput) {
       throw new Error(parsed.error.errors[0].message);
     }
 
-    const { id, ...data } = parsed.data;
+    const { id, namaKendaraan, merek, model, tahun, nomorPlat, statusKetersediaan, foto, deskripsi, hargaPerHari, ...rest } = parsed.data;
 
     const armada = await prisma.mobil.findUnique({
       where: { id },
@@ -140,31 +128,19 @@ export async function updateArmada(input: UpdateArmadaInput) {
       session.user.role === "MITRA" &&
       armada.mitra.userId !== session.user.id
     ) {
-      throw new Error(
-        "FORBIDDEN: Anda hanya dapat mengubah armada Anda sendiri.",
-      );
+      throw new Error("FORBIDDEN: Anda hanya dapat mengubah armada Anda sendiri.");
     }
 
-    const statusMap: Record<string, "ACTIVE" | "INACTIVE" | "MAINTENANCE"> = {
-      TERSEDIA: "ACTIVE",
-      DISEWA: "INACTIVE",
-      PERAWATAN: "MAINTENANCE",
-    };
+    const updateData: any = {};
+    if (namaKendaraan) updateData.name = namaKendaraan;
+    if (merek) updateData.brand = merek;
+    if (model) updateData.model = model;
+    if (nomorPlat) updateData.plateNumber = nomorPlat;
+    if (hargaPerHari) updateData.pricePerDay = hargaPerHari;
+    if (statusKetersediaan) updateData.status = statusKetersediaan === "TERSEDIA" ? "ACTIVE" : statusKetersediaan === "DISEWA" ? "INACTIVE" : "MAINTENANCE";
+    if (foto) updateData.imageUrl = foto;
 
-    return prisma.mobil.update({
-      where: { id },
-      data: {
-        name: data.namaKendaraan,
-        brand: data.merek,
-        model: data.model,
-        plateNumber: data.nomorPlat,
-        pricePerDay: data.hargaPerHari,
-        imageUrl: data.foto,
-        status: data.statusKetersediaan
-          ? statusMap[data.statusKetersediaan]
-          : undefined,
-      },
-    });
+    return prisma.mobil.update({ where: { id }, data: updateData });
   });
 }
 
@@ -188,9 +164,12 @@ export async function deleteArmada(id: string) {
       session.user.role === "MITRA" &&
       armada.mitra.userId !== session.user.id
     ) {
-      throw new Error(
-        "FORBIDDEN: Anda hanya dapat menghapus armada Anda sendiri.",
-      );
+      throw new Error("FORBIDDEN: Anda hanya dapat menghapus armada Anda sendiri.");
+    }
+
+    // Cek armada sedang disewa
+    if (armada.status === "INACTIVE") {
+      throw new Error("Armada sedang disewa dan tidak dapat dihapus.");
     }
 
     await prisma.mobil.delete({ where: { id } });
