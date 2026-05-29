@@ -78,7 +78,7 @@ const FleetSection = () => {
           Volt<span className="text-[#00C389]">Ride</span> Fleet
         </h2>
         <a
-          href="#"
+          href="/gallery"
           className="flex items-center gap-1 text-xs font-bold text-[#00523C] hover:text-[#00C389] transition-colors"
         >
           Explore Full Gallery <ArrowUpRight className="w-4 h-4" />
