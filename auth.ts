@@ -32,6 +32,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           label: "Password",
           type: "password",
         },
+        role: {
+          label: "Role",
+          type: "text",
+        },
       },
 
       async authorize(credentials) {
@@ -40,6 +44,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           .toLowerCase();
 
         const password = String(credentials?.password || "");
+        const targetRole = credentials?.role;
 
         console.log("=== LOGIN DEBUG ===");
         console.log("email:", email);
@@ -69,6 +74,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!user || !user.password) {
           console.log("LOGIN FAILED: user tidak ditemukan / password kosong");
+          return null;
+        }
+
+        if (targetRole && user.role !== targetRole) {
+          console.log(`LOGIN FAILED: role mismatch, expected ${targetRole}, got ${user.role}`);
           return null;
         }
 

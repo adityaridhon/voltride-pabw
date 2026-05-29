@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { SessionProvider } from "next-auth/react";
+import { SidebarProvider } from "@/components/SidebarProvider";
 
 export const metadata = {
   title: "Mitra Dashboard | VoltRide",
@@ -20,7 +21,9 @@ export default async function MitraLayout({
 
   return (
     <SessionProvider session={session}>
-      {children}
+      <SidebarProvider>
+        {children}
+      </SidebarProvider>
     </SessionProvider>
   );
 }

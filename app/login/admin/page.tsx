@@ -22,13 +22,14 @@ export default function AdminLoginPage() {
     const res = await signIn("credentials", {
       email,
       password,
+      role: "ADMIN",
       redirect: false,
     });
 
     setLoading(false);
 
     if (res?.error) {
-      setError("Email atau password salah.");
+      setError("Email, password salah, atau Anda tidak memiliki akses Admin.");
     } else {
       const session = await getSession();
       if (session?.user?.role === "ADMIN") {
