@@ -10,6 +10,16 @@ const PROTECTED_ROUTES: Record<string, string[]> = {
   "/admin": ["ADMIN"],
   "/mitra": ["ADMIN", "MITRA"],
   "/dashboard": ["ADMIN", "MITRA", "USER"],
+  "/profile": ["ADMIN", "MITRA", "USER"],
+  "/wallet": ["ADMIN", "MITRA", "USER"],
+  "/topup": ["ADMIN", "MITRA", "USER"],
+  "/history": ["ADMIN", "MITRA", "USER"],
+  "/transaction": ["ADMIN", "MITRA", "USER"],
+  "/transfer": ["ADMIN", "MITRA", "USER"],
+  "/withdraw": ["ADMIN", "MITRA", "USER"],
+  "/payment-method": ["ADMIN", "MITRA", "USER"],
+  "/security": ["ADMIN", "MITRA", "USER"],
+  "/notifications": ["ADMIN", "MITRA", "USER"],
 };
 
 /** Route yang hanya bisa diakses oleh tamu (belum login) */
@@ -18,7 +28,9 @@ const AUTH_ROUTES = ["/login", "/register"];
 /** Route public yang tidak perlu pengecekan apapun */
 const PUBLIC_ROUTES = ["/", "/api/auth"];
 
-export default auth(function middleware(req: NextRequest & { auth: Awaited<ReturnType<typeof auth>> | null }) {
+export default auth(function middleware(
+  req: NextRequest & { auth: Awaited<ReturnType<typeof auth>> | null },
+) {
   const { nextUrl, auth: session } = req as unknown as {
     nextUrl: URL;
     auth: { user?: { role?: string } } | null;
@@ -32,16 +44,20 @@ export default auth(function middleware(req: NextRequest & { auth: Awaited<Retur
   // User yang sudah login langsung redirect ke dashboard
   const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route));
   if (isAuthRoute && isAuthenticated) {
-    return NextResponse.redirect(new URL(getDashboardByRole(userRole), nextUrl));
+    return NextResponse.redirect(
+      new URL(getDashboardByRole(userRole), nextUrl),
+    );
   }
 
   // ─── 2. Jika ini route public, lanjutkan ───────────────────────────────────
-  const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
+  const isPublicRoute = PUBLIC_ROUTES.some((route) =>
+    pathname.startsWith(route),
+  );
   if (isPublicRoute) return NextResponse.next();
 
   // ─── 3. Cek apakah route ini terproteksi ───────────────────────────────────
   const protectedEntry = Object.entries(PROTECTED_ROUTES).find(([route]) =>
-    pathname.startsWith(route)
+    pathname.startsWith(route),
   );
 
   if (protectedEntry) {
@@ -84,5 +100,7 @@ export const config = {
    * - favicon.ico
    * - File publik (gambar, dll.)
    */
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };

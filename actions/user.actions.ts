@@ -1,14 +1,19 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { requireRole, withErrorHandling } from "@/lib/auth-guard";
+import { requireAuth, requireRole, withErrorHandling } from "@/lib/auth-guard";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import {
   createUserSchema,
   updateUserSchema,
   deleteUserSchema,
 } from "@/lib/validations/master";
 import bcrypt from "bcryptjs";
-import type { CreateUserInput, UpdateUserInput } from "@/lib/validations/master";
+import type {
+  CreateUserInput,
+  UpdateUserInput,
+} from "@/lib/validations/master";
 
 // ─── GET ALL USERS (Admin Only) ───────────────────────────────────────────────
 
@@ -22,9 +27,9 @@ export async function getUsers() {
         name: true,
         email: true,
         role: true,
-        noHp: true,
+        phone: true,
         createdAt: true,
-        mitra: { select: { id: true, namaMitra: true } },
+        mitraProfile: { select: { id: true, companyName: true } },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -44,10 +49,10 @@ export async function getUserById(id: string) {
         name: true,
         email: true,
         role: true,
-        noHp: true,
+        phone: true,
         createdAt: true,
         updatedAt: true,
-        mitra: true,
+        mitraProfile: true,
       },
     });
 
@@ -68,7 +73,7 @@ export async function createUser(input: CreateUserInput) {
       throw new Error(parsed.error.errors[0].message);
     }
 
-    const { name, email, password, role, noHp } = parsed.data;
+    const { name, email, password, role, phone } = parsed.data;
 
     // Cek email sudah terdaftar
     const existing = await prisma.user.findUnique({ where: { email } });
@@ -78,21 +83,26 @@ export async function createUser(input: CreateUserInput) {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword, role, noHp },
-      select: { id: true, name: true, email: true, role: true, createdAt: true },
+      data: { name, email, password: hashedPassword, role, phone },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+      },
     });
 
-    // Jika role MITRA, auto-buat record Mitra dan Dompet
+    // Jika role MITRA, auto-buat record Mitra
     if (role === "MITRA") {
       const mitra = await prisma.mitra.create({
-        data: { userId: user.id, namaMitra: name ?? email },
+        data: { userId: user.id, companyName: name ?? email },
       });
-      await prisma.dompet.create({ data: { mitraId: mitra.id } });
     }
 
-    // Auto-buat Dompet untuk USER
+    // Auto-buat Wallet untuk USER
     if (role === "USER") {
-      await prisma.dompet.create({ data: { userId: user.id } });
+      await prisma.wallet.create({ data: { userId: user.id } });
     }
 
     return user;
@@ -118,7 +128,13 @@ export async function updateUser(input: UpdateUserInput) {
     return prisma.user.update({
       where: { id },
       data,
-      select: { id: true, name: true, email: true, role: true, updatedAt: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        updatedAt: true,
+      },
     });
   });
 }
@@ -138,4 +154,85 @@ export async function deleteUser(id: string) {
     await prisma.user.delete({ where: { id } });
     return { id };
   });
+}
+
+export async function getCurrentUserWallet() {
+  const session = await requireAuth();
+  const userId = session.user!.id;
+
+  const wallet = await prisma.wallet.findUnique({
+    where: { userId },
+    select: { id: true, balance: true },
+  });
+
+  if (wallet) return { userId, wallet };
+
+  const created = await prisma.wallet.create({
+    data: { userId },
+    select: { id: true, balance: true },
+  });
+
+  return { userId, wallet: created };
+}
+
+export async function getRecentTransactions(limit = 4) {
+  const session = await requireAuth();
+  const wallet = await prisma.wallet.findUnique({
+    where: { userId: session.user!.id },
+    select: { id: true },
+  });
+
+  if (!wallet) return [];
+
+  return prisma.transaction.findMany({
+    where: { walletId: wallet.id },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
+}
+
+export async function confirmTopup(formData: FormData) {
+  const session = await requireAuth();
+  const userId = session.user!.id;
+
+  const rawAmount = formData.get("amount");
+  const amount = Number(rawAmount);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new Error("Nominal top up tidak valid.");
+  }
+
+  const wallet = await prisma.wallet.upsert({
+    where: { userId },
+    create: { userId, balance: 0 },
+    update: {},
+    select: { id: true },
+  });
+
+  await prisma.$transaction(async (tx) => {
+    await tx.wallet.update({
+      where: { id: wallet.id },
+      data: { balance: { increment: amount } },
+    });
+
+    await tx.transaction.create({
+      data: {
+        userId,
+        walletId: wallet.id,
+        type: "TOP_UP",
+        direction: "CREDIT",
+        amount,
+        status: "SUCCESS",
+        description: "Top up QRIS",
+      },
+    });
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/profile");
+  revalidatePath("/wallet");
+  revalidatePath("/history");
+  revalidatePath("/topup");
+
+  redirect("/history");
 }

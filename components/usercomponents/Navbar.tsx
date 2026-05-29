@@ -20,33 +20,37 @@ const Navbar = () => {
     if (href === "/") {
       return pathname === "/";
     }
-    return pathname.startsWith(href);
+    return pathname === href;
   };
 
   return (
     <>
-      <nav className="bg-white font-heading z-50 px-10 py-5 flex justify-between items-center w-full shadow-md">
-        <h1 className="font-bold text-2xl">
-          Volt<span className="text-primary">Ride</span>
-        </h1>
+      <nav className="bg-white font-heading z-50 px-6 md:px-12 lg:px-24 py-5 flex justify-between items-center w-full shadow-md sticky top-0">
+        <Link href="/">
+          <h1 className="font-bold text-2xl cursor-pointer">
+            Volt<span className="text-primary">Ride</span>
+          </h1>
+        </Link>
         <ul>
           {navLinks.map((link) => (
-            <li key={link.name} className="inline-block">
-              <Link
-                href={link.href}
-                className={`px-4 py-2 block transition-colors ${
+            <Link key={link.name} href={link.href}>
+              <li
+                className={`inline-block px-4 py-2 cursor-pointer transition-colors relative ${
                   isActive(link.href)
-                    ? "text-primary font-semibold border-b-2 border-primary"
+                    ? "text-primary font-semibold"
                     : "text-gray-700 hover:text-primary"
                 }`}
               >
                 {link.name}
-              </Link>
-            </li>
+                {isActive(link.href) && (
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 h-1 bg-primary rounded-full w-3/4"></div>
+                )}
+              </li>
+            </Link>
           ))}
         </ul>
         <Button size="lg" variant="gradient">
-          Get Started
+          Login
         </Button>
       </nav>
     </>

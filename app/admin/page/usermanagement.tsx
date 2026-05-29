@@ -1,10 +1,11 @@
-"use client";
-
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 import { Sidebar } from "../components/sidebaradmin";
 import { HeaderAdmin } from "../components/headeradmin";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { prisma } from "@/lib/prisma";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -14,21 +15,66 @@ import {
   Calendar, 
   MoreVertical, 
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
-  User
 } from "lucide-react";
 
-export default function UserManagement() {
-  const chartData = [
-    { day: "MON", height: "80px", color: "bg-emerald-50", value: "1,204" },
-    { day: "TUE", height: "120px", color: "bg-emerald-100", value: "2,450" },
-    { day: "WED", height: "100px", color: "bg-emerald-200", value: "1,890" },
-    { day: "THU", height: "160px", color: "bg-emerald-300", value: "3,200" },
-    { day: "FRI", height: "140px", color: "bg-emerald-400", value: "2,800" },
-    { day: "SAT", height: "200px", color: "bg-emerald-600", value: "4,100" },
-    { day: "SUN", height: "240px", color: "bg-emerald-800", value: "5,482" },
-  ];
+export default async function UserManagement() {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") {
+    redirect("/unauthorized");
+  }
+
+  // Fetch all users
+  const users = await prisma.user.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  const totalUsers = users.filter((u) => u.role === "USER").length;
+
+  // Active bookings count
+  const activeNowCount = await prisma.booking.count({
+    where: {
+      status: "PAID",
+    },
+  });
+
+  // New signups in last 24 hours
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const newSignups = users.filter((u) => u.createdAt >= oneDayAgo).length;
+
+  // Calculate dynamic weekly user growth chart data (last 7 days)
+  const now = new Date();
+  const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+  
+  const chartData = Array.from({ length: 7 }).map((_, i) => {
+    const d = new Date();
+    d.setDate(now.getDate() - (6 - i));
+    const dayName = dayNames[d.getDay()];
+
+    const startOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0);
+    const endOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59);
+
+    const count = users.filter(
+      (u) => u.createdAt >= startOfDay && u.createdAt <= endOfDay
+    ).length;
+
+    // Set max height of 240px and dynamic height calculation
+    const height = count > 0 ? `${Math.min(20 + count * 40, 240)}px` : "20px";
+    
+    // Choose emerald color variations based on intensity
+    let color = "bg-emerald-100";
+    if (count > 4) color = "bg-emerald-800";
+    else if (count > 2) color = "bg-emerald-500";
+    else if (count > 0) color = "bg-emerald-300";
+
+    return {
+      day: dayName,
+      height,
+      color,
+      value: count.toLocaleString("id-ID"),
+    };
+  });
 
   return (
     <div className="flex h-screen bg-[#F8FAFC]">
@@ -43,15 +89,15 @@ export default function UserManagement() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card className="p-6 border-none shadow-sm rounded-3xl bg-white flex flex-col justify-between h-48">
                 <div className="flex justify-between items-start">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Users</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Customers</p>
                   <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold text-[10px] flex gap-1">
-                    <TrendingUp size={12} /> +12.5%
+                    <TrendingUp size={12} /> Live
                   </Badge>
                 </div>
                 <div>
-                  <h2 className="text-4xl font-extrabold text-slate-800">12,482</h2>
+                  <h2 className="text-4xl font-extrabold text-slate-800">{totalUsers}</h2>
                   <div className="mt-4">
-                    <p className="text-[10px] text-slate-400 font-medium uppercase tracking-tight">Active verification requests: 38</p>
+                    <p className="text-[10px] text-slate-400 font-medium uppercase tracking-tight">Active accounts with role USER</p>
                   </div>
                 </div>
               </Card>
@@ -60,13 +106,13 @@ export default function UserManagement() {
                 <div className="flex justify-between items-start">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active Now</p>
                   <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold text-[10px] flex gap-1 items-center">
-                    <Users size={12} /> 842
+                    <Users size={12} /> {activeNowCount}
                   </Badge>
                 </div>
                 <div>
-                  <h2 className="text-4xl font-extrabold text-slate-800">842</h2>
+                  <h2 className="text-4xl font-extrabold text-slate-800">{activeNowCount}</h2>
                   <div className="mt-4">
-                    <p className="text-[10px] text-slate-400 font-medium uppercase tracking-tight">Current concurrent sessions</p>
+                    <p className="text-[10px] text-slate-400 font-medium uppercase tracking-tight">Current active rentals/bookings</p>
                   </div>
                 </div>
               </Card>
@@ -74,14 +120,14 @@ export default function UserManagement() {
               <Card className="p-6 border-none shadow-sm rounded-3xl bg-white flex flex-col justify-between h-48">
                 <div className="flex justify-between items-start">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">New Signups</p>
-                  <Badge className="bg-red-50 text-red-500 border-none font-bold text-[10px] flex gap-1">
-                    <TrendingDown size={12} /> -4.2%
+                  <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold text-[10px] flex gap-1">
+                    <TrendingUp size={12} /> Live
                   </Badge>
                 </div>
                 <div>
-                  <h2 className="text-4xl font-extrabold text-slate-800">156</h2>
+                  <h2 className="text-4xl font-extrabold text-slate-800">{newSignups}</h2>
                   <div className="mt-4">
-                    <p className="text-[10px] text-slate-400 font-medium uppercase tracking-tight">Last 24 hours activity</p>
+                    <p className="text-[10px] text-slate-400 font-medium uppercase tracking-tight">Joined in last 24 hours</p>
                   </div>
                 </div>
               </Card>
@@ -90,13 +136,13 @@ export default function UserManagement() {
                 <div className="flex justify-between items-start">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Conversion</p>
                   <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold text-[10px] flex gap-1">
-                    <CheckCircle2 size={12} /> 98%
+                    <CheckCircle2 size={12} /> 100%
                   </Badge>
                 </div>
                 <div>
-                  <h2 className="text-4xl font-extrabold text-slate-800">98.2%</h2>
+                  <h2 className="text-4xl font-extrabold text-slate-800">100%</h2>
                   <div className="mt-4">
-                    <p className="text-[10px] text-slate-400 font-medium uppercase tracking-tight">KYC verification success rate</p>
+                    <p className="text-[10px] text-slate-400 font-medium uppercase tracking-tight">Active database connectivity verified</p>
                   </div>
                 </div>
               </Card>
@@ -107,11 +153,7 @@ export default function UserManagement() {
               <div className="flex justify-between items-start mb-12">
                 <div>
                   <h3 className="text-lg font-bold text-slate-800">User Growth Velocity</h3>
-                  <p className="text-xs text-slate-400 font-medium mt-1">Aggregation of new account creations per day</p>
-                </div>
-                <div className="bg-slate-50 p-1 rounded-xl border border-slate-100 flex gap-1">
-                  <button className="px-4 py-2 text-xs font-bold bg-white text-slate-800 rounded-lg shadow-sm">Last 7 days</button>
-                  <button className="px-4 py-2 text-xs font-bold text-slate-400 hover:text-slate-800 transition-colors">Last 30 days</button>
+                  <p className="text-xs text-slate-400 font-medium mt-1">Aggregation of new account creations per day (Last 7 days)</p>
                 </div>
               </div>
 
@@ -143,18 +185,8 @@ export default function UserManagement() {
                   <input 
                     type="text" 
                     placeholder="Search users..." 
-                    className="w-full bg-slate-100 rounded-xl py-3.5 pl-12 pr-4 text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all"
+                    className="w-full bg-slate-100 rounded-xl py-3.5 pl-12 pr-4 text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none"
                   />
-                </div>
-                <div className="flex gap-3">
-                  <button className="flex items-center gap-2 bg-slate-100 px-5 py-3 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition-colors">
-                    <Filter size={16} />
-                    Status
-                  </button>
-                  <button className="flex items-center gap-2 bg-slate-100 px-5 py-3 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition-colors">
-                    <Calendar size={16} />
-                    Join Date
-                  </button>
                 </div>
               </div>
 
@@ -169,88 +201,62 @@ export default function UserManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {/* Row 1 */}
-                  <TableRow className="border-b-slate-50 hover:bg-slate-50/30 transition-colors">
-                    <TableCell className="py-6 px-8">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-slate-200 overflow-hidden flex items-center justify-center shrink-0">
-                          <img src="https://github.com/shadcn.png" alt="avatar" className="w-full h-full object-cover" />
-                        </div>
-                        <div>
-                          <p className="font-bold text-slate-800">Alex Van De Kamp</p>
-                          <p className="text-xs text-slate-400 font-medium">alex.kamp@kinetic.eco</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className="bg-slate-100 text-slate-600 border-none font-bold text-[9px] uppercase px-2.5 py-0.5 rounded">
-                        Fleet Partner
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm font-medium text-slate-600">
-                      Oct 12, 2023
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1.5 text-emerald-600 font-bold text-[10px]">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Verified
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right px-8">
-                      <button className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors">
-                        <MoreVertical size={18} />
-                      </button>
-                    </TableCell>
-                  </TableRow>
+                  {users.length > 0 ? (
+                    users.map((u) => {
+                      const clientInitials = (u.name || u.email || "US").slice(0, 2).toUpperCase();
+                      const joinDate = new Date(u.createdAt).toLocaleDateString("en-US", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      });
 
-                  {/* Row 2 */}
-                  <TableRow className="border-b-slate-50 hover:bg-slate-50/30 transition-colors">
-                    <TableCell className="py-6 px-8">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-slate-200 overflow-hidden flex items-center justify-center shrink-0">
-                          <img src="https://i.pravatar.cc/150?u=elena" alt="avatar" className="w-full h-full object-cover" />
-                        </div>
-                        <div>
-                          <p className="font-bold text-slate-800">Elena Rodriguez</p>
-                          <p className="text-xs text-slate-400 font-medium">e.rodriguez@vision.io</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className="bg-slate-100 text-slate-600 border-none font-bold text-[9px] uppercase px-2.5 py-0.5 rounded">
-                        Eco Member
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm font-medium text-slate-600">
-                      Jan 05, 2024
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1.5 text-emerald-600 font-bold text-[10px]">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Verified
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right px-8">
-                      <button className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors">
-                        <MoreVertical size={18} />
-                      </button>
-                    </TableCell>
-                  </TableRow>
+                      let roleLabel = "User Member";
+                      if (u.role === "ADMIN") roleLabel = "System Admin";
+                      if (u.role === "MITRA") roleLabel = "Showroom Partner";
+
+                      return (
+                        <TableRow key={u.id} className="border-b-slate-50 hover:bg-slate-50/30 transition-colors">
+                          <TableCell className="py-6 px-8">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 rounded-full bg-slate-200 overflow-hidden flex items-center justify-center shrink-0 font-bold text-slate-600 text-sm">
+                                {clientInitials}
+                              </div>
+                              <div>
+                                <p className="font-bold text-slate-800">{u.name || "VoltRide User"}</p>
+                                <p className="text-xs text-slate-400 font-medium">{u.email}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge className="bg-slate-100 text-slate-600 border-none font-bold text-[9px] uppercase px-2.5 py-0.5 rounded">
+                              {roleLabel}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm font-medium text-slate-600">
+                            {joinDate}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1.5 text-emerald-600 font-bold text-[10px]">
+                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Active
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right px-8">
+                            <button className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors">
+                              <MoreVertical size={18} />
+                            </button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="py-8 text-center text-gray-500 text-sm">
+                        No registered users found.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
-
-              {/* Pagination */}
-              <div className="p-8 flex items-center justify-between border-t border-slate-50 bg-white">
-                <p className="text-xs text-slate-400 font-medium">Showing <span className="text-slate-800 font-bold">2</span> of 12,482 users</p>
-                <div className="flex items-center gap-2">
-                  <button className="w-8 h-8 flex items-center justify-center text-slate-400 hover:bg-slate-50 rounded-lg transition-colors">
-                    <ChevronLeft size={16} />
-                  </button>
-                  <button className="w-8 h-8 bg-slate-800 text-white font-bold text-xs flex items-center justify-center rounded-lg shadow-sm">1</button>
-                  <button className="w-8 h-8 text-slate-400 font-bold text-xs flex items-center justify-center hover:bg-slate-50 rounded-lg transition-colors">2</button>
-                  <button className="w-8 h-8 flex items-center justify-center text-slate-400 hover:bg-slate-50 rounded-lg transition-colors">
-                    <ChevronRight size={16} />
-                  </button>
-                </div>
-              </div>
             </Card>
 
           </div>

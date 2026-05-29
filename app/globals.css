@@ -128,3 +128,33 @@
     @apply font-sans;
   }
 }
+
+@keyframes wallet-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes wallet-float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@layer utilities {
+  .wallet-fade-in {
+    animation: wallet-fade-in 0.6s ease both;
+  }
+  .wallet-float {
+    animation: wallet-float 8s ease-in-out infinite;
+  }
+}
