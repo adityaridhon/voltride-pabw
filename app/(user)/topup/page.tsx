@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { confirmTopup } from "@/actions/user.actions";
 
 const topupOptions = [50000, 100000, 150000, 250000, 500000, 1000000];
@@ -28,7 +29,14 @@ export default function TopupPage() {
   return (
     <section className="space-y-6">
       <header>
-        <p className="text-xs uppercase tracking-[0.2em] text-emerald-500">
+        <Link
+          href="/profile"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-600 transition hover:text-emerald-700"
+        >
+          <span aria-hidden="true">←</span>
+          Kembali ke profil
+        </Link>
+        <p className="mt-3 text-xs uppercase tracking-[0.2em] text-emerald-500">
           Top Up
         </p>
         <h1 className="mt-2 text-3xl font-semibold text-zinc-900">
