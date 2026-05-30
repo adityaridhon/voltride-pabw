@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { prisma } from "@/lib/prisma";
 import { 
   TrendingUp, 
   TrendingDown,
@@ -20,6 +21,55 @@ export default async function DashboardAdmin() {
     redirect("/unauthorized");
   }
 
+  // Fetch live stats from Prisma DB
+  const totalUsers = await prisma.user.count({
+    where: {
+      role: "USER",
+    },
+  });
+
+  const totalPartners = await prisma.mitra.count();
+
+  const activeBookings = await prisma.booking.count({
+    where: {
+      status: "PAID",
+    },
+  });
+
+  const totalFleet = await prisma.mobil.count();
+
+  // Fetch 5 most recent partners
+  const dbRecentPartners = await prisma.mitra.findMany({
+    include: {
+      user: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+      _count: {
+        select: {
+          mobils: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: 5,
+  });
+
+  const recentPartners = dbRecentPartners.map((p) => {
+    const hasCars = p._count.mobils > 0;
+    return {
+      name: p.companyName || p.user.name || p.user.email || "Mitra Baru",
+      loc: p.address || "No Address",
+      fleet: `${p._count.mobils} EVs`,
+      status: hasCars ? "ACTIVE" : "PENDING",
+      color: hasCars ? "bg-emerald-100 text-emerald-700" : "bg-yellow-100 text-yellow-700",
+    };
+  });
+
   return (
     <div className="flex h-screen bg-[#F8FAFC]">
       <Sidebar />
@@ -31,30 +81,30 @@ export default async function DashboardAdmin() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard 
               title="Total Users" 
-              value="12,482" 
-              trend="+ 12.5%" 
-              subtext="Trending up this month" 
+              value={totalUsers.toLocaleString("id-ID")} 
+              trend="Live" 
+              subtext="Registered customers" 
               type="up" 
             />
             <StatCard 
               title="Total Partners" 
-              value="482" 
-              trend=" 4.0%" 
-              subtext="Acquisition needs attention" 
-              type="down" 
-            />
-            <StatCard 
-              title="Active Accounts" 
-              value="3,105" 
-              trend="+ 12.5%" 
-              subtext="Strong user retention" 
+              value={totalPartners.toLocaleString("id-ID")} 
+              trend="Stable" 
+              subtext="Registered showrooms/mitra" 
               type="up" 
             />
             <StatCard 
-              title="Growth Rate" 
-              value="4.5%" 
-              trend="+ 4.5%" 
-              subtext="Steady performance increase" 
+              title="Active Bookings" 
+              value={activeBookings.toLocaleString("id-ID")} 
+              trend="Live" 
+              subtext="Currently active rentals" 
+              type="up" 
+            />
+            <StatCard 
+              title="Total Fleet" 
+              value={totalFleet.toLocaleString("id-ID")} 
+              trend="Stable" 
+              subtext="Vehicles in system" 
               type="up" 
             />
           </div>
@@ -127,36 +177,38 @@ export default async function DashboardAdmin() {
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl font-bold text-slate-800">Recent Partners</h3>
-                  <button className="text-emerald-600 hover:text-emerald-700 text-sm font-bold">View All</button>
+                  <a href="/admin/partners" className="text-emerald-600 hover:text-emerald-700 text-sm font-bold">View All</a>
                 </div>
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-slate-50/50">
-                      <TableHead className="font-bold text-slate-500 py-4 px-6">Partner Name</TableHead>
-                      <TableHead className="font-bold text-slate-500">Location</TableHead>
-                      <TableHead className="font-bold text-slate-500">Fleet</TableHead>
-                      <TableHead className="font-bold text-slate-500">Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {[
-                      { name: "NeoDrive Mobility", loc: "Jakarta Central", fleet: "124 EVs", status: "ACTIVE", color: "bg-emerald-100 text-emerald-700" },
-                      { name: "EcoSwift Logistics", loc: "Bandung Hub", fleet: "86 EVs", status: "ACTIVE", color: "bg-emerald-100 text-emerald-700" },
-                      { name: "Aether Transit", loc: "Bali Coastal", fleet: "215 EVs", status: "FLAGGED", color: "bg-red-100 text-red-700" },
-                    ].map((m, i) => (
-                      <TableRow key={i} className="border-b-slate-100">
-                        <TableCell className="py-5 px-6 font-bold text-slate-800">{m.name}</TableCell>
-                        <TableCell className="text-slate-500">{m.loc}</TableCell>
-                        <TableCell className="text-slate-500 font-medium">{m.fleet}</TableCell>
-                        <TableCell>
-                          <span className={`px-3 py-1 rounded-md text-[10px] font-bold ${m.color}`}>
-                            {m.status}
-                          </span>
-                        </TableCell>
+                {recentPartners.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-slate-50/50">
+                        <TableHead className="font-bold text-slate-500 py-4 px-6">Partner Name</TableHead>
+                        <TableHead className="font-bold text-slate-500">Location</TableHead>
+                        <TableHead className="font-bold text-slate-500">Fleet</TableHead>
+                        <TableHead className="font-bold text-slate-500">Status</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {recentPartners.map((m, i) => (
+                        <TableRow key={i} className="border-b-slate-100">
+                          <TableCell className="py-5 px-6 font-bold text-slate-800">{m.name}</TableCell>
+                          <TableCell className="text-slate-500">{m.loc}</TableCell>
+                          <TableCell className="text-slate-500 font-medium">{m.fleet}</TableCell>
+                          <TableCell>
+                            <span className={`px-3 py-1 rounded-md text-[10px] font-bold ${m.color}`}>
+                              {m.status}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="p-8 text-center text-gray-500 text-sm">
+                    No registered partners found in database.
+                  </div>
+                )}
               </div>
             </Card>
 
@@ -204,8 +256,8 @@ function StatCard({ title, value, trend, subtext, type }: { title: string; value
       <div className="flex flex-col h-full justify-between">
         <div className="flex justify-between items-start">
           <span className="text-sm font-bold text-slate-400">{title}</span>
-          <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold ${type === 'up' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
-            {type === 'up' ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+          <div className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-600">
+            <TrendingUp className="h-3 w-3" />
             {trend}
           </div>
         </div>
@@ -213,8 +265,7 @@ function StatCard({ title, value, trend, subtext, type }: { title: string; value
           <div className="text-4xl font-extrabold text-slate-800 tracking-tight">{value}</div>
           <div className="text-[11px] font-bold text-slate-400 mt-2 flex items-center gap-1">
             {subtext} 
-            {type === 'up' && <ArrowUpRight className="h-3 w-3" />}
-            {type === 'down' && <span className="ml-1">✓</span>}
+            <ArrowUpRight className="h-3 w-3" />
           </div>
         </div>
       </div>

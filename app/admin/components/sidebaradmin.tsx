@@ -19,7 +19,7 @@ export function Sidebar() {
   const linkClass = (path: string) => 
     `flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
       isActive(path) 
-        ? "bg-emerald-500 text-white shadow-md shadow-emerald-200" 
+        ? "bg-[#00C689] text-white shadow-md shadow-[#00C689]/20" 
         : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
     }`;
 

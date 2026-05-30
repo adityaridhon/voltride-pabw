@@ -6,10 +6,72 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Handshake, Wallet, Clock, Leaf, Search, Calendar, TrendingUp, ChevronLeft, ChevronRight, Zap } from "lucide-react";
+import { prisma } from "@/lib/prisma";
 
 export default async function EarningsPage() {
   const session = await auth();
   if (!session || session.user.role !== "MITRA") redirect("/unauthorized");
+
+  // Get Mitra profile
+  const mitra = await prisma.mitra.findUnique({
+    where: { userId: session.user.id },
+    include: {
+      mobils: {
+        include: {
+          bookings: {
+            include: {
+              user: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!mitra) redirect("/unauthorized");
+
+  // Get wallet balance for the Mitra
+  const wallet = await prisma.wallet.findUnique({
+    where: { userId: session.user.id },
+  });
+
+  const balance = wallet?.balance || 0;
+
+  // Flatten all bookings of the Mitra's cars
+  const allBookings = mitra.mobils.flatMap((m) =>
+    m.bookings.map((b) => ({
+      ...b,
+      mobilName: m.name,
+    }))
+  );
+
+  // Sort bookings by creation date descending
+  allBookings.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  // Statistics
+  const totalRevenue = allBookings
+    .filter((b) => ["PAID", "COMPLETED"].includes(b.status))
+    .reduce((sum, b) => sum + b.totalPrice, 0);
+
+  const totalBookings = allBookings.length;
+  const activeRentals = allBookings.filter((b) => b.status === "PAID").length;
+
+  const formattedBalance = new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(balance);
+
+  const formattedRevenue = new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(totalRevenue);
+
+  const memberSince = new Date(mitra.createdAt).toLocaleDateString("en-US", {
+    month: "short",
+    year: "numeric",
+  });
 
   return (
     <div className="flex h-screen bg-[#F8FAFC]">
@@ -29,7 +91,7 @@ export default async function EarningsPage() {
                 <div className="flex justify-between items-start z-10">
                   <div>
                     <p className="text-[10px] font-extrabold text-emerald-500 uppercase tracking-widest mb-1">Partner Identity</p>
-                    <h2 className="text-3xl font-extrabold text-slate-800">Andre Showroom</h2>
+                    <h2 className="text-3xl font-extrabold text-slate-800">{mitra.companyName || "Partner"}</h2>
                   </div>
                   <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 font-bold px-4 py-1.5 rounded-full border border-emerald-200">
                     Verified Partner
@@ -39,15 +101,15 @@ export default async function EarningsPage() {
                 <div className="grid grid-cols-3 gap-8 mt-12 z-10">
                   <div>
                     <p className="text-[10px] font-bold text-slate-500 mb-1">Member Since</p>
-                    <p className="font-bold text-slate-800">Jan 2022</p>
+                    <p className="font-bold text-slate-800">{memberSince}</p>
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-slate-500 mb-1">Location</p>
-                    <p className="font-bold text-slate-800">Jl. Karang Joan</p>
+                    <p className="font-bold text-slate-800 max-w-[150px] truncate">{mitra.address || "No Address"}</p>
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-slate-500 mb-1">Fleet Size</p>
-                    <p className="font-bold text-slate-800">42 Units</p>
+                    <p className="font-bold text-slate-800">{mitra.mobils.length} Units</p>
                   </div>
                 </div>
 
@@ -66,8 +128,7 @@ export default async function EarningsPage() {
                 
                 <div className="mt-8 z-10">
                   <div className="flex items-start gap-1">
-                    <span className="text-emerald-200 font-bold text-2xl mt-1">$</span>
-                    <h2 className="text-5xl font-extrabold tracking-tight">24,850.00</h2>
+                    <h2 className="text-4xl font-extrabold tracking-tight">{formattedBalance}</h2>
                   </div>
                 </div>
 
@@ -91,12 +152,12 @@ export default async function EarningsPage() {
                 <div className="flex justify-between items-start">
                   <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total Revenue</h3>
                   <span className="bg-emerald-50 text-emerald-600 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
-                    <TrendingUp size={10} /> +12.5%
+                    <TrendingUp size={10} /> Live
                   </span>
                 </div>
                 <div className="mt-6">
-                  <div className="text-3xl font-extrabold text-emerald-500">$142,500.00</div>
-                  <p className="text-xs text-slate-400 mt-2 font-medium">Trending up this month</p>
+                  <div className="text-3xl font-extrabold text-emerald-500">{formattedRevenue}</div>
+                  <p className="text-xs text-slate-400 mt-2 font-medium">Accumulated income</p>
                 </div>
               </Card>
 
@@ -106,8 +167,8 @@ export default async function EarningsPage() {
                   <Clock size={16} className="text-slate-400" />
                 </div>
                 <div className="mt-6">
-                  <div className="text-3xl font-extrabold text-emerald-500">198</div>
-                  <p className="text-xs text-slate-400 mt-2 font-medium">Trending up this month</p>
+                  <div className="text-3xl font-extrabold text-emerald-500">{totalBookings}</div>
+                  <p className="text-xs text-slate-400 mt-2 font-medium">Showroom total rentals</p>
                 </div>
               </Card>
 
@@ -117,8 +178,8 @@ export default async function EarningsPage() {
                   <Leaf size={16} className="text-emerald-500" />
                 </div>
                 <div className="mt-6">
-                  <div className="text-3xl font-extrabold text-emerald-500">12</div>
-                  <p className="text-xs text-slate-400 mt-2 font-medium">On the road</p>
+                  <div className="text-3xl font-extrabold text-emerald-500">{activeRentals}</div>
+                  <p className="text-xs text-slate-400 mt-2 font-medium">Currently on the road</p>
                 </div>
               </Card>
 
@@ -131,25 +192,9 @@ export default async function EarningsPage() {
                   <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input 
                     type="text" 
-                    placeholder="Booking ID, Username..." 
+                    placeholder="Search bookings..." 
                     className="w-full bg-slate-100 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none"
                   />
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <Calendar size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
-                    <button className="bg-slate-100 rounded-xl py-3 pl-10 pr-4 text-sm font-bold text-slate-600">
-                      01 Jan - 31 Jan 2024
-                    </button>
-                  </div>
-                  
-                  <div className="bg-slate-100 p-1 rounded-xl flex gap-1">
-                    <button className="px-4 py-2 text-xs font-bold bg-white text-slate-800 shadow-sm rounded-lg">All</button>
-                    <button className="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-800">Active</button>
-                    <button className="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-800">Completed</button>
-                    <button className="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-800">Canceled</button>
-                  </div>
                 </div>
               </div>
 
@@ -164,165 +209,65 @@ export default async function EarningsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {/* Row 1 */}
-                  <TableRow className="border-b-slate-50">
-                    <TableCell className="py-4 px-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-xs shrink-0">
-                          BK
-                        </div>
-                        <div>
-                          <p className="font-bold text-slate-800 text-sm">Budi Kusuma</p>
-                          <p className="text-[10px] text-slate-500">Premium Member</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Zap size={12} className="text-slate-400" />
-                        <span className="font-medium text-slate-700 text-sm">Tesla Model 3 Performance</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <p className="font-bold text-slate-800 text-sm">12 Jan - 15 Jan 2024</p>
-                      <p className="text-[10px] text-slate-500">3 Days</p>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className="bg-emerald-100 hover:bg-emerald-100 text-emerald-600 border-none font-bold text-[9px] uppercase px-2.5 py-0.5">
-                        ACTIVE
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right px-6 font-bold text-slate-800 text-sm">
-                      Rp 4.500.000
-                    </TableCell>
-                  </TableRow>
+                  {allBookings.length > 0 ? (
+                    allBookings.map((b) => {
+                      const clientInitials = (b.user.name || b.user.email || "PL").slice(0, 2).toUpperCase();
+                      const rentDurationStr = `${new Date(b.startDate).toLocaleDateString("id-ID", { day: "numeric", month: "short" })} - ${new Date(b.endDate).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}`;
 
-                  {/* Row 2 */}
-                  <TableRow className="border-b-slate-50">
-                    <TableCell className="py-4 px-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center font-bold text-xs shrink-0">
-                          AS
-                        </div>
-                        <div>
-                          <p className="font-bold text-slate-800 text-sm">Anisa Sitorus</p>
-                          <p className="text-[10px] text-slate-500">New User</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Zap size={12} className="text-slate-400" />
-                        <span className="font-medium text-slate-700 text-sm">Hyundai IONIQ 5 Signature</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <p className="font-bold text-slate-800 text-sm">10 Jan - 11 Jan 2024</p>
-                      <p className="text-[10px] text-slate-500">1 Day</p>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className="bg-slate-200 hover:bg-slate-200 text-slate-600 border-none font-bold text-[9px] uppercase px-2.5 py-0.5">
-                        COMPLETED
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right px-6 font-bold text-slate-800 text-sm">
-                      Rp 1.250.000
-                    </TableCell>
-                  </TableRow>
+                      let statusBadgeColor = "bg-yellow-100 text-yellow-600";
+                      if (b.status === "COMPLETED") statusBadgeColor = "bg-slate-200 text-slate-600";
+                      if (b.status === "PAID") statusBadgeColor = "bg-emerald-100 text-emerald-600";
+                      if (b.status === "CANCELLED" || b.status === "FAILED") statusBadgeColor = "bg-red-100 text-red-600";
 
-                  {/* Row 3 */}
-                  <TableRow className="border-b-slate-50">
-                    <TableCell className="py-4 px-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-xs shrink-0">
-                          DP
-                        </div>
-                        <div>
-                          <p className="font-bold text-slate-800 text-sm">Deni Pratama</p>
-                          <p className="text-[10px] text-slate-500">Regular User</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Zap size={12} className="text-slate-400" />
-                        <span className="font-medium text-slate-700 text-sm">Wuling Air EV Long Range</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <p className="font-bold text-slate-800 text-sm">08 Jan - 10 Jan 2024</p>
-                      <p className="text-[10px] text-slate-500">2 Days</p>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className="bg-emerald-300 hover:bg-emerald-300 text-emerald-800 border-none font-bold text-[9px] uppercase px-2.5 py-0.5">
-                        INCOMING
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right px-6 font-bold text-slate-800 text-sm">
-                      Rp 900.000
-                    </TableCell>
-                  </TableRow>
+                      const formattedTotalPrice = new Intl.NumberFormat("id-ID", {
+                        style: "currency",
+                        currency: "IDR",
+                        maximumFractionDigits: 0,
+                      }).format(b.totalPrice);
 
-                  {/* Row 4 */}
-                  <TableRow className="border-b-slate-50">
-                    <TableCell className="py-4 px-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-xs shrink-0">
-                          RK
-                        </div>
-                        <div>
-                          <p className="font-bold text-slate-800 text-sm">Rina Kartika</p>
-                          <p className="text-[10px] text-slate-500">Business Client</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Zap size={12} className="text-slate-400" />
-                        <span className="font-medium text-slate-700 text-sm">Tesla Model X Plaid</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <p className="font-bold text-slate-800 text-sm">05 Jan - 08 Jan 2024</p>
-                      <p className="text-[10px] text-slate-500">3 Days</p>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className="bg-red-100 hover:bg-red-100 text-red-600 border-none font-bold text-[9px] uppercase px-2.5 py-0.5">
-                        CANCELED
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right px-6 font-bold text-slate-800 text-sm">
-                      Rp 7.800.000
-                    </TableCell>
-                  </TableRow>
+                      return (
+                        <TableRow key={b.id} className="border-b-slate-50">
+                          <TableCell className="py-4 px-6">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-xs shrink-0">
+                                {clientInitials}
+                              </div>
+                              <div>
+                                <p className="font-bold text-slate-800 text-sm">{b.user.name || b.user.email}</p>
+                                <p className="text-[10px] text-slate-500">VoltRide Member</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Zap size={12} className="text-slate-400" />
+                              <span className="font-medium text-slate-700 text-sm">{b.mobilName}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <p className="font-bold text-slate-800 text-sm">{rentDurationStr}</p>
+                            <p className="text-[10px] text-slate-500">{b.totalDays} Days</p>
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={`${statusBadgeColor} border-none font-bold text-[9px] uppercase px-2.5 py-0.5`}>
+                              {b.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right px-6 font-bold text-slate-800 text-sm">
+                            {formattedTotalPrice}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="py-8 text-center text-gray-500 text-sm">
+                        No bookings found for your fleet.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
-
-              {/* Pagination */}
-              <div className="p-6 flex items-center justify-between border-t border-slate-50">
-                <p className="text-xs text-slate-500 font-medium">Showing 1 - 4 from <strong className="text-slate-800">1,284</strong> booking</p>
-                <div className="flex items-center gap-2">
-                  <button className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50">
-                    <ChevronLeft size={14} />
-                  </button>
-                  <button className="w-8 h-8 rounded-lg bg-emerald-500 text-white font-bold text-xs flex items-center justify-center shadow-sm">
-                    1
-                  </button>
-                  <button className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 font-medium text-xs hover:bg-slate-50">
-                    2
-                  </button>
-                  <button className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 font-medium text-xs hover:bg-slate-50">
-                    ...
-                  </button>
-                  <button className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 font-medium text-xs hover:bg-slate-50">
-                    45
-                  </button>
-                  <button className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50">
-                    <ChevronRight size={14} />
-                  </button>
-                </div>
-              </div>
-
             </div>
           </div>
         </main>
