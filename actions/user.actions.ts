@@ -157,7 +157,7 @@ export async function deleteUser(id: string) {
 }
 
 export async function getCurrentUserWallet() {
-  const session = await requireAuth();
+  const session = await requireRole(["USER"]);
   const userId = session.user!.id;
 
   const wallet = await prisma.wallet.findUnique({
@@ -173,6 +173,63 @@ export async function getCurrentUserWallet() {
   });
 
   return { userId, wallet: created };
+}
+
+export async function requestWithdrawal(formData: FormData) {
+  return withErrorHandling(async () => {
+    const session = await requireRole(["USER"]);
+    const userId = session.user!.id;
+
+    const rawAmount = formData.get("amount");
+    const amount = Number(rawAmount);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new Error("Nominal penarikan tidak valid.");
+    }
+
+    const wallet = await prisma.wallet.findUnique({
+      where: { userId },
+      select: { id: true, balance: true },
+    });
+
+    if (!wallet) {
+      throw new Error("Dompet tidak ditemukan.");
+    }
+
+    const currentBalance = Number(wallet.balance ?? 0);
+    if (amount > currentBalance) {
+      throw new Error("Saldo tidak mencukupi untuk penarikan ini.");
+    }
+
+    const updatedWallet = await prisma.$transaction(async (tx) => {
+      const nextWallet = await tx.wallet.update({
+        where: { id: wallet.id },
+        data: { balance: { decrement: amount } },
+        select: { balance: true },
+      });
+
+      await tx.transaction.create({
+        data: {
+          userId,
+          walletId: wallet.id,
+          type: "WITHDRAW",
+          direction: "DEBIT",
+          amount,
+          status: "SUCCESS",
+          description: "Penarikan saldo",
+        },
+      });
+
+      return nextWallet;
+    });
+
+    revalidatePath("/profile");
+    revalidatePath("/withdraw");
+    revalidatePath("/wallet");
+    revalidatePath("/history");
+
+    return { balance: Number(updatedWallet.balance ?? 0) };
+  });
 }
 
 export async function getRecentTransactions(limit = 4) {

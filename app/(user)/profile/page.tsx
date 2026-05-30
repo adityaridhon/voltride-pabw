@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth-guard";
+import { requireRole } from "@/lib/auth-guard";
 
 const formatRupiah = (value: number) =>
   new Intl.NumberFormat("id-ID", {
@@ -31,7 +31,7 @@ const statusLabels: Record<string, string> = {
 };
 
 export default async function ProfilePage() {
-  const session = await requireAuth();
+  const session = await requireRole(["USER"]);
   const userId = session.user!.id;
 
   const [user, wallet, bookings] = await prisma.$transaction([
