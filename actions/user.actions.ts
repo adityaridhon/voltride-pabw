@@ -175,7 +175,10 @@ export async function getCurrentUserWallet() {
   return { userId, wallet: created };
 }
 
-export async function requestWithdrawal(formData: FormData) {
+export async function requestWithdrawal(
+  _prevState: unknown,
+  formData: FormData,
+) {
   return withErrorHandling(async () => {
     const session = await requireRole(["USER"]);
     const userId = session.user!.id;
@@ -229,6 +232,50 @@ export async function requestWithdrawal(formData: FormData) {
     revalidatePath("/history");
 
     return { balance: Number(updatedWallet.balance ?? 0) };
+  });
+}
+
+export async function updateProfile(_prevState: unknown, formData: FormData) {
+  return withErrorHandling(async () => {
+    const session = await requireRole(["USER"]);
+    const userId = session.user!.id;
+
+    const name = String(formData.get("name") ?? "").trim();
+    const email = String(formData.get("email") ?? "").trim();
+    const phone = String(formData.get("phone") ?? "").trim();
+
+    if (!name || !email) {
+      throw new Error("Nama dan email wajib diisi.");
+    }
+
+    const existing = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    });
+
+    if (!existing) {
+      throw new Error("User tidak ditemukan.");
+    }
+
+    if (existing.email !== email) {
+      const emailUsed = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true },
+      });
+
+      if (emailUsed && emailUsed.id !== userId) {
+        throw new Error("Email sudah digunakan user lain.");
+      }
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data: { name, email, phone },
+      select: { name: true, email: true, phone: true },
+    });
+
+    revalidatePath("/profile");
+    return updated;
   });
 }
 

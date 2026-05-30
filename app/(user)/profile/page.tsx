@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth-guard";
+import WalletBalance from "@/components/usercomponents/WalletBalance";
+import ProfileForm from "@/components/usercomponents/ProfileForm";
 
 const formatRupiah = (value: number) =>
   new Intl.NumberFormat("id-ID", {
@@ -92,7 +94,7 @@ export default async function ProfilePage() {
         {[
           {
             label: "Saldo dompet",
-            value: formatRupiah(balance),
+            value: <WalletBalance initialBalance={balance} />,
             note: "Siap dipakai",
           },
           {
@@ -124,41 +126,13 @@ export default async function ProfilePage() {
       <div className="grid gap-6 lg:grid-cols-[1.15fr_1fr]">
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
           <h2 className="text-lg font-semibold text-zinc-900">Edit profil</h2>
-          <div className="mt-4 grid gap-4">
-            <div>
-              <label className="text-xs uppercase tracking-[0.2em] text-zinc-400">
-                Nama lengkap
-              </label>
-              <input
-                type="text"
-                defaultValue={user?.name ?? ""}
-                className="mt-3 w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-700 placeholder:text-zinc-400"
-              />
-            </div>
-            <div>
-              <label className="text-xs uppercase tracking-[0.2em] text-zinc-400">
-                Email
-              </label>
-              <input
-                type="email"
-                defaultValue={user?.email ?? ""}
-                className="mt-3 w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-700 placeholder:text-zinc-400"
-              />
-            </div>
-            <div>
-              <label className="text-xs uppercase tracking-[0.2em] text-zinc-400">
-                Nomor HP
-              </label>
-              <input
-                type="tel"
-                defaultValue={user?.phone ?? ""}
-                className="mt-3 w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-700 placeholder:text-zinc-400"
-              />
-            </div>
+          <div className="mt-4">
+            <ProfileForm
+              name={user?.name ?? ""}
+              email={user?.email ?? ""}
+              phone={user?.phone ?? ""}
+            />
           </div>
-          <button className="mt-5 w-full rounded-full bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600">
-            Simpan perubahan
-          </button>
         </div>
 
         <div
@@ -171,7 +145,7 @@ export default async function ProfilePage() {
               Saldo aktif
             </p>
             <p className="mt-2 text-2xl font-semibold text-zinc-900">
-              {formatRupiah(balance)}
+              <WalletBalance initialBalance={balance} />
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <Link
@@ -251,7 +225,10 @@ export default async function ProfilePage() {
               className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white px-4 py-4 text-sm text-zinc-700"
             >
               Lihat dompet
-              <span className="text-emerald-600">{formatRupiah(balance)}</span>
+              <WalletBalance
+                initialBalance={balance}
+                className="text-emerald-600"
+              />
             </Link>
             <Link
               href="#history"
