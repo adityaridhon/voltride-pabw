@@ -3,6 +3,12 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import {
+  Prisma,
+  TransactionDirection,
+  TransactionStatus,
+  TransactionType,
+} from "@/src/generated/prisma";
 
 type BookingActionState = {
   ok: boolean;
@@ -53,6 +59,7 @@ export async function createBookingAction(
     where: { id: mobilId },
     select: {
       id: true,
+      name: true,
       status: true,
       pricePerDay: true,
       totalUnit: true,
@@ -68,56 +75,121 @@ export async function createBookingAction(
     return { ok: false, message: "Mobil sedang tidak tersedia untuk dipesan." };
   }
 
-  const overlappingBookings = await prisma.booking.findMany({
-    where: {
-      mobilId,
-      status: { in: [...ACTIVE_BOOKING_STATUSES] },
-      startDate: { lte: endDate },
-      endDate: { gte: startDate },
-    },
-    select: {
-      startDate: true,
-      endDate: true,
-    },
-  });
-
-  const requestedDates = getDateKeysBetween(startDate, endDate);
-  const fullyBookedDate = requestedDates.find((dateKey) => {
-    const bookingCount = overlappingBookings.filter((booking) =>
-      getDateKeysBetween(booking.startDate, booking.endDate).includes(dateKey)
-    ).length;
-
-    return bookingCount >= mobil.totalUnit;
-  });
-
-  if (fullyBookedDate) {
-    return {
-      ok: false,
-      message: `Tanggal ${formatDateId(fullyBookedDate)} sudah penuh dipesan.`,
-    };
-  }
-
   const totalDays = getTotalDays(startDate, endDate);
   const totalPrice = totalDays * mobil.pricePerDay;
 
-  await prisma.booking.create({
-    data: {
-      userId: session.user.id,
-      mobilId,
-      startDate,
-      endDate,
-      totalDays,
-      totalPrice,
-      status: "PENDING",
-    },
-  });
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      await prisma.$transaction(
+        async (tx) => {
+          const overlappingBookings = await tx.booking.findMany({
+            where: {
+              mobilId,
+              status: { in: [...ACTIVE_BOOKING_STATUSES] },
+              startDate: { lte: endDate },
+              endDate: { gte: startDate },
+            },
+            select: {
+              startDate: true,
+              endDate: true,
+            },
+          });
+
+          const requestedDates = getDateKeysBetween(startDate, endDate);
+          const bookedDate = requestedDates.find((dateKey) =>
+            overlappingBookings.some((booking) =>
+              getDateKeysBetween(booking.startDate, booking.endDate).includes(dateKey)
+            )
+          );
+
+          if (bookedDate) {
+            throw new BookingActionError(`Tanggal ${formatDateId(bookedDate)} sudah dibooking.`);
+          }
+
+          const wallet = await tx.wallet.findUnique({
+            where: { userId: session.user.id },
+          });
+
+          if (!wallet) {
+            throw new BookingActionError("Wallet tidak ditemukan. Silakan hubungi admin.");
+          }
+
+          const walletUpdate = await tx.wallet.updateMany({
+            where: {
+              id: wallet.id,
+              balance: { gte: totalPrice },
+            },
+            data: {
+              balance: { decrement: totalPrice },
+            },
+          });
+
+          if (walletUpdate.count === 0) {
+            throw new BookingActionError("Saldo tidak cukup untuk menyelesaikan pemesanan.");
+          }
+
+          const booking = await tx.booking.create({
+            data: {
+              userId: session.user.id,
+              mobilId,
+              startDate,
+              endDate,
+              totalDays,
+              totalPrice,
+              status: "PAID",
+            },
+          });
+
+          await tx.transaction.create({
+            data: {
+              userId: session.user.id,
+              walletId: wallet.id,
+              bookingId: booking.id,
+              type: TransactionType.BOOKING_PAYMENT,
+              direction: TransactionDirection.DEBIT,
+              amount: totalPrice,
+              status: TransactionStatus.SUCCESS,
+              description: `Pembayaran booking mobil ${mobil.name}`,
+            },
+          });
+        },
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+      );
+      break;
+    } catch (error) {
+      if (error instanceof BookingActionError) {
+        return { ok: false, message: error.message };
+      }
+
+      if (isRetryableTransactionError(error) && attempt < 3) {
+        continue;
+      }
+
+      console.error(error);
+      return { ok: false, message: "Terjadi kesalahan saat memproses pemesanan." };
+    }
+  }
 
   revalidatePath("/product");
+  revalidatePath("/dashboard");
+  revalidatePath("/history");
+  revalidatePath("/wallet");
 
   return {
     ok: true,
-    message: "Pemesanan berhasil dikirim. Status booking masih menunggu pembayaran.",
+    message: "Pemesanan berhasil. Saldo sudah dipotong dan booking sudah lunas.",
   };
+}
+
+class BookingActionError extends Error {}
+
+function isRetryableTransactionError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: string }).code === "P2034"
+  );
 }
 
 function parseDate(value: string) {

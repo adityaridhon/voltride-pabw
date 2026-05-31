@@ -12,11 +12,18 @@ import {
   Send,
   Zap,
   Gauge,
-  X,
 } from "lucide-react";
 import { useActionState } from "react";
 import { createBookingAction } from "@/actions/booking.actions";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 
@@ -99,7 +106,7 @@ function Sidebar({
       <div>
         <div className="flex items-center gap-2 mb-4">
           <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-800 shrink-0">Price Range</span>
-          <div className="h-[1px] bg-zinc-100 w-full" />
+          <div className="h-px bg-zinc-100 w-full" />
         </div>
         <input
           type="range"
@@ -120,7 +127,7 @@ function Sidebar({
       <div>
         <div className="flex items-center gap-2 mb-4">
           <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-800 shrink-0">Merek</span>
-          <div className="h-[1px] bg-zinc-100 w-full" />
+          <div className="h-px bg-zinc-100 w-full" />
         </div>
         {brands.length === 0 ? (
           <p className="text-xs text-zinc-400">Tidak ada merek tersedia</p>
@@ -141,7 +148,7 @@ function Sidebar({
                   className="flex items-center gap-3 cursor-pointer select-none group/item"
                 >
                   <span className={cn(
-                    "size-[18px] rounded-[5px] border inline-flex items-center justify-center transition-all duration-200",
+                    "size-4.5 rounded-[5px] border inline-flex items-center justify-center transition-all duration-200",
                     isSelected
                       ? "border-[#00b488] bg-[#00b488] text-white shadow-sm"
                       : "border-zinc-300 bg-white group-hover/item:border-zinc-400"
@@ -167,7 +174,7 @@ function Sidebar({
       <div>
         <div className="flex items-center gap-2 mb-4">
           <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-800 shrink-0">Warna</span>
-          <div className="h-[1px] bg-zinc-100 w-full" />
+          <div className="h-px bg-zinc-100 w-full" />
         </div>
         {colors.length === 0 ? (
           <p className="text-xs text-zinc-400">Tidak ada pilihan warna</p>
@@ -227,8 +234,8 @@ function MobilCard({
             sizes="(max-width: 768px) 100vw, 50vw"
           />
         ) : (
-          <div className="flex h-full items-center justify-center bg-gradient-to-br from-zinc-50 to-zinc-100/80 relative">
-            <div className="absolute inset-0 bg-[radial-gradient(#e4e4e7_1px,transparent_1px)] [background-size:16px_16px] opacity-40" />
+          <div className="flex h-full items-center justify-center bg-linear-to-br from-zinc-50 to-zinc-100/80 relative">
+            <div className="absolute inset-0 bg-[radial-gradient(#e4e4e7_1px,transparent_1px)] bg-size-[16px_16px] opacity-40" />
             <div className="relative flex flex-col items-center gap-2">
               <Car className="size-12 text-zinc-300/80 stroke-[1.5]" />
               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">No Image Available</span>
@@ -344,7 +351,9 @@ function BookingModal({
   const [month, setMonth] = React.useState(() => new Date());
   const [startDate, setStartDate] = React.useState("");
   const [endDate, setEndDate] = React.useState("");
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [state, formAction, isPending] = useActionState(createBookingAction, { ok: false, message: "" });
+  const formRef = React.useRef<HTMLFormElement>(null);
 
   const bookedDates = React.useMemo(() => getBookedDateMap(mobil), [mobil]);
   const totalDays = startDate && endDate ? getTotalDays(startDate, endDate) : 0;
@@ -372,74 +381,97 @@ function BookingModal({
   }, [state.message]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
-      <div
-        className="relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 rounded-full p-1.5 hover:bg-zinc-100 transition"
-        >
-          <X className="size-5 text-zinc-500" />
-        </button>
-
-        <div className="p-6">
-          <div className="flex items-center gap-2 text-primary mb-2">
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <div className="flex items-center gap-2 text-primary">
             <CalendarDays className="size-5" />
             <span className="text-sm font-medium">Kalender Booking</span>
           </div>
-          <h2 className="text-2xl font-bold text-zinc-900 mb-1">{mobil.name}</h2>
-          <p className="text-sm text-zinc-500 mb-5">
+          <DialogTitle className="text-2xl font-bold tracking-tight">{mobil.name}</DialogTitle>
+          <DialogDescription>
             Pilih rentang tanggal pemakaian.
-          </p>
+          </DialogDescription>
+        </DialogHeader>
 
-          <CalendarGrid
-            month={month}
-            totalUnit={mobil.totalUnit}
-            bookedDates={bookedDates}
-            startDate={startDate}
-            endDate={endDate}
-            onPrevious={() => setMonth((v) => new Date(v.getFullYear(), v.getMonth() - 1, 1))}
-            onNext={() => setMonth((v) => new Date(v.getFullYear(), v.getMonth() + 1, 1))}
-            onDateClick={(dateKey) => {
-              if (isDateFullyBooked(dateKey, bookedDates, mobil.totalUnit)) return;
-              if (!startDate || (startDate && endDate) || dateKey < startDate) {
-                setStartDate(dateKey);
-                setEndDate("");
-              } else {
-                setEndDate(dateKey);
-              }
-            }}
-          />
+        <CalendarGrid
+          month={month}
+          bookedDates={bookedDates}
+          startDate={startDate}
+          endDate={endDate}
+          onPrevious={() => setMonth((v) => new Date(v.getFullYear(), v.getMonth() - 1, 1))}
+          onNext={() => setMonth((v) => new Date(v.getFullYear(), v.getMonth() + 1, 1))}
+          onDateClick={(dateKey) => {
+            if (isDateBooked(dateKey, bookedDates)) return;
+            if (!startDate || (startDate && endDate) || dateKey < startDate) {
+              setStartDate(dateKey);
+              setEndDate("");
+              return;
+            }
 
-          <div ref={nextSectionRef} className="mt-4 grid gap-2 rounded-xl border border-zinc-100 bg-zinc-50 p-4 text-sm">
-            <InfoRow label="Tanggal mulai" value={startDate ? dateFormatter.format(parseDate(startDate)) : "Belum dipilih"} />
-            <InfoRow label="Tanggal selesai" value={endDate ? dateFormatter.format(parseDate(endDate)) : "Belum dipilih"} />
-            <InfoRow label="Durasi" value={totalDays > 0 ? `${totalDays} hari` : "-"} />
-            <InfoRow label="Total" value={totalPrice > 0 ? formatter.format(totalPrice) : "-"} strong />
-          </div>
+            if (rangeHasBookedDate(startDate, dateKey, bookedDates)) return;
+            setEndDate(dateKey);
+          }}
+        />
 
-          <form action={formAction} className="mt-4 space-y-3">
-            <input type="hidden" name="mobilId" value={mobil.id} />
-            <input type="hidden" name="startDate" value={startDate} />
-            <input type="hidden" name="endDate" value={endDate} />
-            <Button className="w-full" size="lg" disabled={!startDate || !endDate || isPending}>
-              <Send className="size-4" />
-              {isPending ? "Mengirim..." : "Kirim Pemesanan"}
-            </Button>
-            {state.message && (
-              <p
-                ref={messageRef}
-                className={cn("rounded-xl px-3 py-2 text-sm animate-in fade-in slide-in-from-top-1 duration-200", state.ok ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700")}
-              >
-                {state.message}
-              </p>
-            )}
-          </form>
+        <div ref={nextSectionRef} className="grid gap-2 rounded-xl border border-zinc-100 bg-zinc-50 p-4 text-sm">
+          <InfoRow label="Tanggal mulai" value={startDate ? dateFormatter.format(parseDate(startDate)) : "Belum dipilih"} />
+          <InfoRow label="Tanggal selesai" value={endDate ? dateFormatter.format(parseDate(endDate)) : "Belum dipilih"} />
+          <InfoRow label="Durasi" value={totalDays > 0 ? `${totalDays} hari` : "-"} />
+          <InfoRow label="Total" value={totalPrice > 0 ? formatter.format(totalPrice) : "-"} strong />
         </div>
-      </div>
-    </div>
+
+        <form ref={formRef} action={formAction} className="space-y-3">
+          <input type="hidden" name="mobilId" value={mobil.id} />
+          <input type="hidden" name="startDate" value={startDate} />
+          <input type="hidden" name="endDate" value={endDate} />
+          <Button
+            type="button"
+            className="w-full"
+            size="lg"
+            disabled={!startDate || !endDate || isPending}
+            onClick={() => setConfirmOpen(true)}
+          >
+            <Send className="size-4" />
+            {isPending ? "Memproses..." : "Kirim Pemesanan"}
+          </Button>
+          {state.message && (
+            <p
+              ref={messageRef}
+              className={cn("rounded-xl px-3 py-2 text-sm animate-in fade-in slide-in-from-top-1 duration-200", state.ok ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700")}
+            >
+              {state.message}
+            </p>
+          )}
+        </form>
+
+        <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+          <DialogContent className="max-w-sm" showCloseButton={false}>
+            <DialogHeader>
+              <DialogTitle>Yakin dengan pilihan anda?</DialogTitle>
+              <DialogDescription>
+                Saldo akan langsung dipotong sebesar {totalPrice > 0 ? formatter.format(totalPrice) : "-"} setelah Anda menekan OK.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setConfirmOpen(false)} disabled={isPending}>
+                Batal
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  setConfirmOpen(false);
+                  formRef.current?.requestSubmit();
+                }}
+                disabled={isPending}
+              >
+                OK
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -451,12 +483,15 @@ export default function ProductCatalog({ mobils }: { mobils: CatalogMobil[] }) {
   const [selectedMobil, setSelectedMobil] = React.useState<CatalogMobil | null>(null);
   const [selectedBrands, setSelectedBrands] = React.useState<string[]>([]);
   const [selectedColors, setSelectedColors] = React.useState<string[]>([]);
-  const [visibleCount, setVisibleCount] = React.useState(4);
-
-  // Reset pagination to 4 cards whenever a filter changes for optimal UX!
-  React.useEffect(() => {
-    setVisibleCount(4);
-  }, [query, maxPrice, showAvailableOnly, selectedBrands, selectedColors]);
+  const [pagination, setPagination] = React.useState({ filterKey: "", visibleCount: 4 });
+  const filterKey = [
+    query,
+    maxPrice,
+    showAvailableOnly,
+    selectedBrands.join("|"),
+    selectedColors.join("|"),
+  ].join("::");
+  const visibleCount = pagination.filterKey === filterKey ? pagination.visibleCount : 4;
 
   const brands = React.useMemo(() => {
     return Array.from(new Set(mobils.map((m) => m.brand).filter(Boolean))) as string[];
@@ -571,7 +606,7 @@ export default function ProductCatalog({ mobils }: { mobils: CatalogMobil[] }) {
                 <div className="flex justify-center pt-4">
                   <button
                     type="button"
-                    onClick={() => setVisibleCount((prev) => prev + 4)}
+                    onClick={() => setPagination({ filterKey, visibleCount: visibleCount + 4 })}
                     className="rounded-2xl border border-zinc-200 bg-white px-8 py-3 text-sm font-bold text-zinc-700 shadow-sm hover:border-zinc-300 hover:bg-zinc-50 active:scale-95 transition-all cursor-pointer"
                   >
                     Show More
@@ -588,9 +623,9 @@ export default function ProductCatalog({ mobils }: { mobils: CatalogMobil[] }) {
 
 // --- Calendar Grid (unchanged logic) ---
 function CalendarGrid({
-  month, totalUnit, bookedDates, startDate, endDate, onPrevious, onNext, onDateClick,
+  month, bookedDates, startDate, endDate, onPrevious, onNext, onDateClick,
 }: {
-  month: Date; totalUnit: number; bookedDates: Map<string, number>;
+  month: Date; bookedDates: Map<string, number>;
   startDate: string; endDate: string;
   onPrevious: () => void; onNext: () => void; onDateClick: (dateKey: string) => void;
 }) {
@@ -613,14 +648,14 @@ function CalendarGrid({
       <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium text-zinc-400 mb-1">
         {["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"].map((d) => <div key={d} className="py-1">{d}</div>)}
       </div>
-      <div className="grid min-w-[280px] grid-cols-7 gap-1">
+      <div className="grid min-w-70 grid-cols-7 gap-1">
         {days.map((date, i) => {
           if (!date) return <div key={`e-${i}`} className="aspect-square" />;
           const dateKey = toDateKey(date);
-          const disabled = dateKey < todayKey || isDateFullyBooked(dateKey, bookedDates, totalUnit);
+          const booked = isDateBooked(dateKey, bookedDates);
+          const disabled = dateKey < todayKey || booked;
           const selected = dateKey === startDate || dateKey === endDate;
           const inRange = startDate && endDate && dateKey > startDate && dateKey < endDate;
-          const booked = bookedDates.has(dateKey);
           return (
             <button
               key={dateKey} type="button" disabled={disabled} onClick={() => onDateClick(dateKey)}
@@ -629,7 +664,6 @@ function CalendarGrid({
                 selected && "border-primary bg-primary text-white",
                 inRange && !selected && "border-primary/20 bg-primary/10 text-primary",
                 !selected && !inRange && "border-transparent hover:bg-zinc-100",
-                booked && !disabled && !selected && "bg-amber-50 text-amber-700",
                 disabled && "cursor-not-allowed border-red-100 bg-red-50 text-red-400 opacity-80"
               )}
             >
@@ -640,8 +674,7 @@ function CalendarGrid({
       </div>
       <div className="mt-3 flex flex-wrap gap-3 text-xs text-zinc-400">
         <Legend color="bg-primary" label="Dipilih" />
-        <Legend color="bg-amber-400" label="Sebagian terisi" />
-        <Legend color="bg-red-400" label="Penuh" />
+        <Legend color="bg-red-400" label="Sudah dibooking" />
       </div>
     </div>
   );
@@ -682,8 +715,14 @@ function getBookedDateMap(mobil: CatalogMobil) {
   return map;
 }
 
-function isDateFullyBooked(dateKey: string, bookedDates: Map<string, number>, totalUnit: number) {
-  return (bookedDates.get(dateKey) ?? 0) >= totalUnit;
+function isDateBooked(dateKey: string, bookedDates: Map<string, number>) {
+  return bookedDates.has(dateKey);
+}
+
+function rangeHasBookedDate(startDate: string, endDate: string, bookedDates: Map<string, number>) {
+  return getDateKeysBetween(startDate, endDate).some((dateKey) =>
+    isDateBooked(dateKey, bookedDates)
+  );
 }
 
 function getCalendarDays(month: Date) {
