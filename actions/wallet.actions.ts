@@ -20,23 +20,26 @@ export async function topUpWithQris(formData: FormData) {
       throw new Error("Nominal top up tidak valid.");
     }
 
-    const dompet = await prisma.dompet.upsert({
+    const wallet = await prisma.wallet.upsert({
       where: { userId: session.user.id },
       update: {},
       create: { userId: session.user.id },
     });
 
     await prisma.$transaction([
-      prisma.dompet.update({
-        where: { id: dompet.id },
-        data: { saldo: { increment: amount } },
+      prisma.wallet.update({
+        where: { id: wallet.id },
+        data: { balance: { increment: amount } },
       }),
-      prisma.transaksiSaldo.create({
+      prisma.transaction.create({
         data: {
-          dompetId: dompet.id,
-          jenis: "TOPUP",
-          jumlah: amount,
-          keterangan: "Top up via QRIS",
+          userId: session.user.id,
+          walletId: wallet.id,
+          type: "TOP_UP",
+          direction: "CREDIT",
+          amount,
+          status: "SUCCESS",
+          description: "Top up QRIS",
         },
       }),
     ]);

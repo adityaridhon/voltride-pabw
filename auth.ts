@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import type { Role } from "@/src/generated/prisma";
@@ -113,10 +114,67 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     }),
+
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      allowDangerousEmailAccountLinking: true,
+    }),
   ],
 
   callbacks: {
-    async jwt({ token, user }) {
+    async signIn({ user, account, profile }) {
+      // Handle Google OAuth sign-in
+      if (account?.provider === "google") {
+        try {
+          const email = user.email?.toLowerCase() || "";
+
+          // Cek apakah user sudah ada
+          let dbUser = await prisma.user.findUnique({
+            where: { email },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          });
+
+          // Jika belum ada, buat user baru dengan role USER
+          if (!dbUser) {
+            dbUser = await prisma.user.create({
+              data: {
+                email,
+                name: user.name || profile?.name || "Google User",
+                role: "USER",
+              },
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+              },
+            });
+
+            // Auto-create wallet untuk user baru
+            await prisma.wallet.create({ data: { userId: dbUser.id } });
+          }
+
+          // Update user object dengan data dari database
+          user.id = dbUser.id;
+          user.role = dbUser.role as Role;
+
+          return true;
+        } catch (error) {
+          console.error("Error in Google sign-in callback:", error);
+          return false;
+        }
+      }
+
+      return true;
+    },
+
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
         token.role = (user as { role: Role }).role;

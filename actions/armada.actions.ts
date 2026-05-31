@@ -71,7 +71,7 @@ export async function createArmada(input: CreateArmadaInput) {
       throw new Error(parsed.error.errors[0].message);
     }
 
-    const { mitraId, hargaPerHari, namaKendaraan, merek, model, tahun, nomorPlat, statusKetersediaan, foto, deskripsi } = parsed.data;
+    const { mitraId, hargaPerHari, namaKendaraan, merek, model, nomorPlat, statusKetersediaan, foto, deskripsi } = parsed.data;
 
     // Pastikan mitra ada
     const mitra = await prisma.mitra.findUnique({ where: { id: mitraId } });
@@ -114,7 +114,7 @@ export async function updateArmada(input: UpdateArmadaInput) {
       throw new Error(parsed.error.errors[0].message);
     }
 
-    const { id, namaKendaraan, merek, model, tahun, nomorPlat, statusKetersediaan, foto, deskripsi, hargaPerHari, ...rest } = parsed.data;
+    const { id, namaKendaraan, merek, model, nomorPlat, statusKetersediaan, foto, hargaPerHari, ...rest } = parsed.data;
 
     const armada = await prisma.mobil.findUnique({
       where: { id },
@@ -131,13 +131,23 @@ export async function updateArmada(input: UpdateArmadaInput) {
       throw new Error("FORBIDDEN: Anda hanya dapat mengubah armada Anda sendiri.");
     }
 
+    // Check nomor plat duplikat (exclude armada saat ini)
+    if (nomorPlat && nomorPlat !== armada.plateNumber) {
+      const existing = await prisma.mobil.findUnique({
+        where: { plateNumber: nomorPlat },
+      });
+      if (existing) throw new Error(`Nomor plat '${nomorPlat}' sudah terdaftar.`);
+    }
+
     const updateData: any = {};
     if (namaKendaraan) updateData.name = namaKendaraan;
     if (merek) updateData.brand = merek;
     if (model) updateData.model = model;
     if (nomorPlat) updateData.plateNumber = nomorPlat;
     if (hargaPerHari) updateData.pricePerDay = hargaPerHari;
-    if (statusKetersediaan) updateData.status = statusKetersediaan === "TERSEDIA" ? "ACTIVE" : statusKetersediaan === "DISEWA" ? "INACTIVE" : "MAINTENANCE";
+    if (statusKetersediaan) {
+      updateData.status = statusKetersediaan === "TERSEDIA" ? "ACTIVE" : statusKetersediaan === "DISEWA" ? "INACTIVE" : "MAINTENANCE";
+    }
     if (foto) updateData.imageUrl = foto;
 
     return prisma.mobil.update({ where: { id }, data: updateData });
@@ -167,9 +177,16 @@ export async function deleteArmada(id: string) {
       throw new Error("FORBIDDEN: Anda hanya dapat menghapus armada Anda sendiri.");
     }
 
-    // Cek armada sedang disewa
-    if (armada.status === "INACTIVE") {
-      throw new Error("Armada sedang disewa dan tidak dapat dihapus.");
+    // Check active bookings (PENDING atau PAID dianggap aktif)
+    const activeBookings = await prisma.booking.findFirst({
+      where: {
+        mobilId: id,
+        status: { in: ["PENDING", "PAID"] },
+      },
+    });
+
+    if (activeBookings) {
+      throw new Error("Armada tidak dapat dihapus karena masih memiliki pemesanan aktif.");
     }
 
     await prisma.mobil.delete({ where: { id } });
