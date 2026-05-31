@@ -160,19 +160,25 @@ export async function getCurrentUserWallet() {
   const session = await requireAuth();
   const userId = session.user!.id;
 
-  const wallet = await prisma.wallet.findUnique({
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true },
+  });
+
+  if (!user) {
+    throw new Error(
+      "User tidak ditemukan di database. Silakan logout dan login kembali.",
+    );
+  }
+
+  const wallet = await prisma.wallet.upsert({
     where: { userId },
+    create: { userId, balance: 0 },
+    update: {},
     select: { id: true, balance: true },
   });
 
-  if (wallet) return { userId, wallet };
-
-  const created = await prisma.wallet.create({
-    data: { userId },
-    select: { id: true, balance: true },
-  });
-
-  return { userId, wallet: created };
+  return { userId, wallet };
 }
 
 export async function getRecentTransactions(limit = 4) {
