@@ -3,6 +3,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import LogoutButton from "@/components/LogoutButton";
 
 export default async function UserLayout({
   children,
@@ -34,9 +35,12 @@ export default async function UserLayout({
             <Link href="/history">History</Link>
           </li>
         </ul>
-        <Button size="lg" asChild>
-          <Link href="/profile">Profile</Link>
-        </Button>
+        <div className="flex gap-3">
+          <Button size="lg" asChild>
+            <Link href="/profile">Profile</Link>
+          </Button>
+          <LogoutButton />
+        </div>
       </nav>
 
       <main className="mx-10 pb-10 mt-6">{children}</main>
