@@ -45,20 +45,15 @@ export default function LoginPage() {
     setGoogleLoading(true);
     setError("");
     try {
-      await signIn("google", { redirect: false });
-      const session = await getSession();
-      if (session?.user?.role === "ADMIN") {
-        router.push("/admin/dashboard");
-      } else if (session?.user?.role === "MITRA") {
-        router.push("/mitra/dashboard");
-      } else {
-        router.push("/dashboard");
-      }
-      router.refresh();
+      // OAuth providers require redirect, so we use redirect: true (default behavior)
+      await signIn("google", {
+        redirect: true,
+        callbackUrl: "/dashboard",
+      });
     } catch (err) {
-      setError("Gagal login dengan Google. Silakan coba lagi.");
-    } finally {
       setGoogleLoading(false);
+      setError("Gagal login dengan Google. Silakan coba lagi.");
+      console.error("Google login error:", err);
     }
   }
 

@@ -79,7 +79,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         if (targetRole && user.role !== targetRole) {
-          console.log(`LOGIN FAILED: role mismatch, expected ${targetRole}, got ${user.role}`);
+          console.log(
+            `LOGIN FAILED: role mismatch, expected ${targetRole}, got ${user.role}`,
+          );
           return null;
         }
 
@@ -172,6 +174,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
 
       return true;
+    },
+
+    async redirect({ url, baseUrl }) {
+      // If it's a relative url, it's safe to redirect
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url;
+
+      return baseUrl;
     },
 
     async jwt({ token, user, account }) {
