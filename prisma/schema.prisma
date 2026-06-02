@@ -59,6 +59,8 @@ model User {
   mitraProfile Mitra?
   bookings     Booking[]
   transactions Transaction[]
+  reviewsGiven    UserReview[] @relation("UserReviewGiven")
+  reviewsReceived UserReview[] @relation("UserReviewReceived")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -129,12 +131,32 @@ model Booking {
   status     BookingStatus @default(PENDING)
 
   transactions Transaction[]
+  userReview   UserReview?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([mobilId])
+}
+
+model UserReview {
+  id        String  @id @default(cuid())
+  bookingId String  @unique
+  reviewerId String
+  userId    String
+  rating    Int
+  comment   String?
+
+  booking  Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  reviewer User    @relation("UserReviewGiven", fields: [reviewerId], references: [id], onDelete: Cascade)
+  user     User    @relation("UserReviewReceived", fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([reviewerId])
 }
 
 model Transaction {

@@ -179,6 +179,17 @@ exports.Prisma.BookingScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.UserReviewScalarFieldEnum = {
+  id: 'id',
+  bookingId: 'bookingId',
+  reviewerId: 'reviewerId',
+  userId: 'userId',
+  rating: 'rating',
+  comment: 'comment',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.TransactionScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -252,6 +263,7 @@ exports.Prisma.ModelName = {
   Mobil: 'Mobil',
   Wallet: 'Wallet',
   Booking: 'Booking',
+  UserReview: 'UserReview',
   Transaction: 'Transaction'
 };
 
