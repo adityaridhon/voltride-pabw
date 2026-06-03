@@ -51,7 +51,7 @@ export default async function PartnersManagement() {
   return (
     <div className="flex h-screen bg-[#F8FAFC]">
       <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden ml-64">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <HeaderAdmin title="Partner Management" />
         
         <main className="flex-1 overflow-y-auto p-10">
