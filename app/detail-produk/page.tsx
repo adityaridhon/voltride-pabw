@@ -1,4 +1,3 @@
-// app/product/[id]/page.tsx
 import React from "react";
 import Navbar from "@/components/usercomponents/Navbar";
 import Footer from "@/components/usercomponents/Footer";
@@ -19,15 +18,11 @@ export default function ProductDetailPage() {
     <main className="min-h-screen bg-[#FDFDFD]">
       <Navbar />
 
-      {/* 1. Bagian Hero */}
       <ProductHero />
 
-      {/* 2. Container Konten Utama */}
       <section className="px-6 lg:px-24 max-w-7xl mx-auto -mt-10 relative z-20 pb-24">
-        {/* Highlight Cards (3 kotak atas) */}
         <ProductHighlights />
 
-        {/* Layout Berdampingan: Kiri (Specs) & Kanan (Booking) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start mb-24">
           <TechnicalSpecs />
 
@@ -36,7 +31,6 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* 3. Daftar Mobil Terkait */}
         <RelatedVehicles />
       </section>
 
