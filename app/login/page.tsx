@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { Globe } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -10,6 +11,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,6 +41,22 @@ export default function LoginPage() {
     }
   }
 
+  async function handleGoogleLogin() {
+    setGoogleLoading(true);
+    setError("");
+    try {
+      // OAuth providers require redirect, so we use redirect: true (default behavior)
+      await signIn("google", {
+        redirect: true,
+        callbackUrl: "/dashboard",
+      });
+    } catch (err) {
+      setGoogleLoading(false);
+      setError("Gagal login dengan Google. Silakan coba lagi.");
+      console.error("Google login error:", err);
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-950">
       <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-2xl p-8 space-y-6">
@@ -52,6 +70,22 @@ export default function LoginPage() {
             {error}
           </div>
         )}
+
+        {/* Google Login Button */}
+        <button
+          onClick={handleGoogleLogin}
+          disabled={googleLoading || loading}
+          className="w-full bg-white hover:bg-zinc-100 disabled:opacity-50 text-zinc-900 font-medium rounded-lg py-2.5 text-sm transition-colors flex items-center justify-center gap-2"
+        >
+          <Globe size={18} />
+          {googleLoading ? "Memproses..." : "Login dengan Google"}
+        </button>
+
+        <div className="flex items-center gap-3">
+          <div className="flex-1 h-px bg-zinc-700" />
+          <span className="text-xs text-zinc-500">atau</span>
+          <div className="flex-1 h-px bg-zinc-700" />
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -78,46 +112,15 @@ export default function LoginPage() {
           </div>
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || googleLoading}
             className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-medium rounded-lg py-2.5 text-sm transition-colors"
           >
             {loading ? "Memproses..." : "Masuk"}
           </button>
         </form>
 
-        {/* Quick fill untuk testing */}
         <div className="border-t border-zinc-800 pt-4">
-          <p className="text-xs text-zinc-500 mb-2 text-center">
-            Quick fill untuk testing:
-          </p>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              {
-                label: "Admin",
-                email: "admin@voltride.id",
-                pass: "Admin@12345",
-              },
-              {
-                label: "Mitra",
-                email: "mitra@voltride.id",
-                pass: "Mitra@12345",
-              },
-              { label: "User", email: "user@voltride.id", pass: "User@12345" },
-            ].map((acc) => (
-              <button
-                key={acc.label}
-                type="button"
-                onClick={() => {
-                  setEmail(acc.email);
-                  setPassword(acc.pass);
-                }}
-                className="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg py-2 transition-colors"
-              >
-                {acc.label}
-              </button>
-            ))}
-          </div>
-          <p className="text-xs text-zinc-500 text-center mt-3">
+          <p className="text-xs text-zinc-500 text-center">
             Belum punya akun?{" "}
             <a
               href="/register"

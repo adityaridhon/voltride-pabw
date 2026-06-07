@@ -142,3 +142,19 @@ export async function loginUser(input: LoginInput) {
 export async function logoutUser() {
   await signOut({ redirect: false });
 }
+
+// ─── LOGIN WITH GOOGLE ────────────────────────────────────────────────────────
+
+export async function loginWithGoogle() {
+  return withErrorHandling(async () => {
+    try {
+      await signIn("google", { redirect: false });
+      return { ok: true };
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw new Error("Gagal login dengan Google. Silakan coba lagi.");
+      }
+      throw error;
+    }
+  });
+}

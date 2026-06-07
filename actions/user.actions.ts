@@ -113,7 +113,7 @@ export async function createUser(input: CreateUserInput) {
 
 export async function updateUser(input: UpdateUserInput) {
   return withErrorHandling(async () => {
-    await requireRole(["ADMIN"]);
+    const session = await requireRole(["ADMIN"]);
 
     const parsed = updateUserSchema.safeParse(input);
     if (!parsed.success) {
@@ -125,6 +125,14 @@ export async function updateUser(input: UpdateUserInput) {
     const existing = await prisma.user.findUnique({ where: { id } });
     if (!existing) throw new Error("User tidak ditemukan.");
 
+    // Check email duplikat (jika email diubah)
+    if (data.email && data.email !== existing.email) {
+      const emailExists = await prisma.user.findUnique({
+        where: { email: data.email },
+      });
+      if (emailExists) throw new Error("Email sudah terdaftar.");
+    }
+
     return prisma.user.update({
       where: { id },
       data,
@@ -133,6 +141,7 @@ export async function updateUser(input: UpdateUserInput) {
         name: true,
         email: true,
         role: true,
+        phone: true,
         updatedAt: true,
       },
     });
@@ -143,13 +152,18 @@ export async function updateUser(input: UpdateUserInput) {
 
 export async function deleteUser(id: string) {
   return withErrorHandling(async () => {
-    await requireRole(["ADMIN"]);
+    const session = await requireRole(["ADMIN"]);
 
     const parsed = deleteUserSchema.safeParse({ id });
     if (!parsed.success) throw new Error("ID user tidak valid.");
 
     const existing = await prisma.user.findUnique({ where: { id } });
     if (!existing) throw new Error("User tidak ditemukan.");
+
+    // Prevent self-deletion
+    if (session.user.id === id) {
+      throw new Error("Anda tidak dapat menghapus akun Anda sendiri.");
+    }
 
     await prisma.user.delete({ where: { id } });
     return { id };

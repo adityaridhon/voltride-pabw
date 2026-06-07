@@ -47,13 +47,8 @@ export const deleteMitraSchema = z.object({
 export const createArmadaSchema = z.object({
   mitraId: z.string().cuid("Mitra ID tidak valid"),
   namaKendaraan: z.string().min(2).max(150),
-  merek: z.string().min(1).max(100),
-  model: z.string().min(1).max(100),
-  tahun: z
-    .number()
-    .int()
-    .min(2000, "Tahun minimal 2000")
-    .max(new Date().getFullYear() + 1),
+  merek: z.string().min(1).max(100).optional(),
+  model: z.string().min(1).max(100).optional(),
   nomorPlat: z.string().min(4).max(20),
   hargaPerHari: z.number().positive("Harga harus lebih dari 0"),
   foto: z.string().url().optional(),
@@ -69,7 +64,6 @@ export const updateArmadaSchema = z.object({
   namaKendaraan: z.string().min(2).max(150).optional(),
   merek: z.string().min(1).max(100).optional(),
   model: z.string().min(1).max(100).optional(),
-  tahun: z.number().int().min(2000).optional(),
   nomorPlat: z.string().min(4).max(20).optional(),
   hargaPerHari: z.number().positive().optional(),
   foto: z.string().url().optional(),

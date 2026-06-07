@@ -3,6 +3,7 @@ import Link from "next/link";
 import { auth, signOut } from "@/auth";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import LogoutButton from "@/components/LogoutButton";
 
 export default async function UserLayout({
   children,
@@ -31,16 +32,12 @@ export default async function UserLayout({
             <Link href="/withdraw">Withdraw</Link>
           </li>
         </ul>
-        <form
-          action={async () => {
-            "use server";
-            await signOut();
-          }}
-        >
-          <Button size="lg" type="submit">
-            Keluar
+        <div className="flex gap-3">
+          <Button size="lg" asChild>
+            <Link href="/profile">Profile</Link>
           </Button>
-        </form>
+          <LogoutButton />
+        </div>
       </nav>
 
       <main className="mx-10 pb-10 mt-6">{children}</main>
