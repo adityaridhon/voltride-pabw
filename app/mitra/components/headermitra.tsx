@@ -15,10 +15,10 @@ export default function HeaderMitra({ title = "Dashboard Overview" }: { title?: 
   return (
     <header className="flex items-center justify-between px-8 py-4 border-b bg-white h-[72px] shrink-0">
       <div className="flex items-center gap-4">
-        <button onClick={toggle} className="text-gray-500 hover:text-gray-900 lg:hidden">
+        <button onClick={toggle} className="text-gray-500 hover:text-gray-900">
           <Menu size={20} />
         </button>
-        <div className="h-5 w-px bg-gray-300 lg:hidden"></div>
+        <div className="h-5 w-px bg-gray-300"></div>
         <h1 className="text-sm font-semibold text-gray-800">{title}</h1>
       </div>
 

@@ -1,11 +1,16 @@
+"use client";
+
 import { Menu } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useSidebar } from "@/components/SidebarProvider";
 
 export function HeaderAdmin({ title = "Dashboard Admin" }: { title?: string }) {
+  const { toggle } = useSidebar();
+
   return (
     <header className="h-20 bg-white/80 backdrop-blur-sm border-b border-gray-100 flex items-center justify-between px-8 sticky top-0 z-10">
       <div className="flex items-center gap-4">
-        <button className="p-2 hover:bg-slate-50 rounded-lg text-slate-500">
+        <button onClick={toggle} className="p-2 hover:bg-slate-50 rounded-lg text-slate-500">
           <Menu className="w-5 h-5" />
         </button>
         <h1 className="text-lg font-semibold text-slate-800 border-l-2 border-slate-200 pl-4">

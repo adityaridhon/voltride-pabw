@@ -27,8 +27,12 @@ export default function SidebarMitra() {
           onClick={() => setIsOpen(false)}
         />
       )}
-      <aside className={`fixed inset-y-0 left-0 w-64 border-r bg-white h-screen flex flex-col px-4 py-6 z-50 transition-transform duration-300 lg:static lg:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="flex items-center justify-between mb-10 px-2">
+      <aside className={`fixed inset-y-0 left-0 h-screen flex flex-col bg-white z-50 transition-all duration-300 lg:static ${
+        isOpen 
+          ? "translate-x-0 w-64 px-4 py-6 border-r" 
+          : "-translate-x-full lg:translate-x-0 w-0 px-0 py-6 border-r-0 overflow-hidden"
+      }`}>
+        <div className="flex items-center justify-between mb-10 px-2 min-w-[224px]">
           <span className="text-2xl font-bold text-gray-900">
             Volt<span className="text-[#00C689]">Ride</span>
           </span>
@@ -40,7 +44,7 @@ export default function SidebarMitra() {
           </button>
         </div>
 
-      <nav className="flex-1 space-y-2">
+      <nav className="flex-1 space-y-2 min-w-[224px]">
         <Link href="/mitra/dashboard" className={linkClass("/mitra/dashboard")}>
           <LayoutDashboard size={20} />
           Dashboard
@@ -55,7 +59,7 @@ export default function SidebarMitra() {
         </Link>
       </nav>
 
-      <div className="mt-auto">
+      <div className="mt-auto min-w-[224px]">
         <h4 className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Support</h4>
         <Link href="#" className="flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-lg font-medium transition-colors">
           <HelpCircle size={20} />
