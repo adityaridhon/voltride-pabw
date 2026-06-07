@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth-guard";
+import { requireRole } from "@/lib/auth-guard";
+import WalletBalance from "@/components/usercomponents/WalletBalance";
+import ProfileForm from "@/components/usercomponents/ProfileForm";
 
 const formatRupiah = (value: number) =>
   new Intl.NumberFormat("id-ID", {
@@ -18,8 +20,20 @@ const formatDate = (value: Date) =>
     year: "numeric",
   }).format(value);
 
+const statusStyles: Record<string, string> = {
+  SUCCESS: "bg-emerald-100 text-emerald-700",
+  PENDING: "bg-zinc-100 text-zinc-600",
+  FAILED: "bg-rose-100 text-rose-700",
+};
+
+const statusLabels: Record<string, string> = {
+  SUCCESS: "Sukses",
+  PENDING: "Diproses",
+  FAILED: "Gagal",
+};
+
 export default async function ProfilePage() {
-  const session = await requireAuth();
+  const session = await requireRole(["USER"]);
   const userId = session.user!.id;
 
   const [user, wallet, bookings] = await prisma.$transaction([
@@ -54,6 +68,14 @@ export default async function ProfilePage() {
       })
     : 0;
 
+  const transactions = wallet
+    ? await prisma.transaction.findMany({
+        where: { walletId: wallet.id },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+      })
+    : [];
+
   return (
     <section className="space-y-6">
       <header>
@@ -72,7 +94,7 @@ export default async function ProfilePage() {
         {[
           {
             label: "Saldo dompet",
-            value: formatRupiah(balance),
+            value: <WalletBalance initialBalance={balance} />,
             note: "Siap dipakai",
           },
           {
@@ -104,53 +126,26 @@ export default async function ProfilePage() {
       <div className="grid gap-6 lg:grid-cols-[1.15fr_1fr]">
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
           <h2 className="text-lg font-semibold text-zinc-900">Edit profil</h2>
-          <div className="mt-4 grid gap-4">
-            <div>
-              <label className="text-xs uppercase tracking-[0.2em] text-zinc-400">
-                Nama lengkap
-              </label>
-              <input
-                type="text"
-                defaultValue={user?.name ?? ""}
-                className="mt-3 w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-700 placeholder:text-zinc-400"
-              />
-            </div>
-            <div>
-              <label className="text-xs uppercase tracking-[0.2em] text-zinc-400">
-                Email
-              </label>
-              <input
-                type="email"
-                defaultValue={user?.email ?? ""}
-                className="mt-3 w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-700 placeholder:text-zinc-400"
-              />
-            </div>
-            <div>
-              <label className="text-xs uppercase tracking-[0.2em] text-zinc-400">
-                Nomor HP
-              </label>
-              <input
-                type="tel"
-                defaultValue={user?.phone ?? ""}
-                className="mt-3 w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-700 placeholder:text-zinc-400"
-              />
-            </div>
+          <div className="mt-4">
+            <ProfileForm
+              name={user?.name ?? ""}
+              email={user?.email ?? ""}
+              phone={user?.phone ?? ""}
+            />
           </div>
-          <button className="mt-5 w-full rounded-full bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600">
-            Simpan perubahan
-          </button>
         </div>
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <h2 className="text-lg font-semibold text-zinc-900">
-            Dompet & preferensi
-          </h2>
+        <div
+          id="wallet"
+          className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm"
+        >
+          <h2 className="text-lg font-semibold text-zinc-900">Dompet</h2>
           <div className="mt-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">
               Saldo aktif
             </p>
             <p className="mt-2 text-2xl font-semibold text-zinc-900">
-              {formatRupiah(balance)}
+              <WalletBalance initialBalance={balance} />
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <Link
@@ -183,10 +178,10 @@ export default async function ProfilePage() {
               Riwayat pemesanan
             </h2>
             <Link
-              href="/history"
+              href="#history"
               className="text-xs text-emerald-600 transition hover:text-emerald-700"
             >
-              Lihat semua
+              Lihat transaksi
             </Link>
           </div>
           <div className="mt-4 space-y-3">
@@ -226,20 +221,107 @@ export default async function ProfilePage() {
           <h2 className="text-lg font-semibold text-zinc-900">Akses cepat</h2>
           <div className="mt-4 space-y-3">
             <Link
-              href="/wallet"
+              href="#wallet"
               className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white px-4 py-4 text-sm text-zinc-700"
             >
               Lihat dompet
-              <span className="text-emerald-600">{formatRupiah(balance)}</span>
+              <WalletBalance
+                initialBalance={balance}
+                className="text-emerald-600"
+              />
             </Link>
             <Link
-              href="/history"
+              href="#history"
               className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white px-4 py-4 text-sm text-zinc-700"
             >
               Riwayat transaksi
               <span className="text-emerald-600">{transactionCount}</span>
             </Link>
           </div>
+        </div>
+      </div>
+
+      <div
+        id="history"
+        className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-emerald-500">
+              Riwayat transaksi
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold text-zinc-900">
+              Aktivitas dompet terbaru
+            </h2>
+            <p className="mt-2 text-sm text-zinc-500">
+              Semua transaksi dompet VoltRide dalam 10 aktivitas terakhir.
+            </p>
+          </div>
+          <Link
+            href="#wallet"
+            className="text-xs text-emerald-600 transition hover:text-emerald-700"
+          >
+            Lihat saldo
+          </Link>
+        </div>
+
+        <div className="mt-5 overflow-x-auto">
+          {transactions.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 px-4 py-8 text-center text-sm text-zinc-500">
+              Belum ada transaksi dompet.
+            </div>
+          ) : (
+            <table className="w-full min-w-[640px] border-collapse text-left text-sm">
+              <thead>
+                <tr className="text-xs uppercase tracking-[0.2em] text-zinc-400">
+                  <th className="px-4 py-3 font-semibold">ID</th>
+                  <th className="px-4 py-3 font-semibold">Jenis</th>
+                  <th className="px-4 py-3 font-semibold">Tanggal</th>
+                  <th className="px-4 py-3 font-semibold">Status</th>
+                  <th className="px-4 py-3 font-semibold">Nominal</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="border-t border-zinc-200 text-zinc-700"
+                  >
+                    <td className="px-4 py-4 text-emerald-600">
+                      {item.id.slice(0, 8).toUpperCase()}
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-zinc-400">⚡</span>
+                        <span className="font-medium text-zinc-900">
+                          {item.type}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="font-medium text-zinc-900">
+                        {formatDate(item.createdAt)}
+                      </div>
+                      <div className="text-xs text-zinc-500">
+                        {item.description ?? "Transaksi dompet"}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[item.status]}`}
+                      >
+                        {statusLabels[item.status]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 font-semibold text-zinc-900">
+                      {item.direction === "CREDIT" ? "+" : "-"}
+                      {formatRupiah(Number(item.amount))}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </section>

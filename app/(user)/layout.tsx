@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { auth } from "@/auth";
+import { auth, signOut } from "@/auth";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import LogoutButton from "@/components/LogoutButton";
@@ -26,13 +26,10 @@ export default async function UserLayout({
             <Link href="/dashboard">Home</Link>
           </li>
           <li className="inline-block px-4 py-2 text-gray-700 hover:text-primary cursor-pointer">
-            <Link href="/wallet">Wallet</Link>
-          </li>
-          <li className="inline-block px-4 py-2 text-gray-700 hover:text-primary cursor-pointer">
             <Link href="/topup">Top Up</Link>
           </li>
           <li className="inline-block px-4 py-2 text-gray-700 hover:text-primary cursor-pointer">
-            <Link href="/history">History</Link>
+            <Link href="/withdraw">Withdraw</Link>
           </li>
         </ul>
         <div className="flex gap-3">

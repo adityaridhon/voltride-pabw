@@ -124,7 +124,7 @@ export default async function DashboardPage() {
               Aktivitas terbaru
             </h2>
             <Link
-              href="/history"
+              href="/profile#history"
               className="text-xs text-emerald-600 transition hover:text-emerald-700"
             >
               Lihat semua
