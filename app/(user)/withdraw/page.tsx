@@ -1,83 +1,60 @@
-const banks = [
-  { name: "BCA", note: "Proses 1-3 menit" },
-  { name: "Mandiri", note: "Proses instan" },
-  { name: "BNI", note: "Proses 5 menit" },
-];
+import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { requireRole } from "@/lib/auth-guard";
+import WalletBalance from "@/components/usercomponents/WalletBalance";
+import WithdrawForm from "@/components/usercomponents/WithdrawForm";
 
-const quickAmount = ["Rp 100.000", "Rp 250.000", "Rp 500.000", "Rp 1.000.000"];
+const formatRupiah = (value: number) =>
+  new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  })
+    .format(value)
+    .replace("Rp", "Rp ");
 
-export default function WithdrawPage() {
+export default async function WithdrawPage() {
+  const session = await requireRole(["USER"]);
+  const userId = session.user!.id;
+
+  const wallet = await prisma.wallet.findUnique({
+    where: { userId },
+    select: { balance: true },
+  });
+
+  const balance = Number(wallet?.balance ?? 0);
+
   return (
     <section className="space-y-6">
       <header>
-        <p className="text-xs uppercase tracking-[0.2em] text-emerald-300/80">
-          Tarik Dana
+        <Link
+          href="/profile"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-600 transition hover:text-emerald-700"
+        >
+          <span aria-hidden="true">←</span>
+          Kembali ke profil
+        </Link>
+        <p className="mt-3 text-xs uppercase tracking-[0.2em] text-emerald-500">
+          Tarik Tunai
         </p>
-        <h1 className="mt-2 font-heading text-3xl font-semibold">
-          Tarik saldo ke rekening bank
+        <h1 className="mt-2 text-3xl font-semibold text-zinc-900">
+          Tarik saldo ke rekening
         </h1>
-        <p className="mt-2 text-sm text-slate-400">
-          Pilih rekening tujuan dan tentukan nominal penarikan dana.
+        <p className="mt-2 text-sm text-zinc-500">
+          Lengkapi data penarikan. Fitur ini sedang disiapkan.
         </p>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-5">
-          <h2 className="font-heading text-lg">Rekening tujuan</h2>
-          <div className="mt-4 space-y-3">
-            {banks.map((bank) => (
-              <div
-                key={bank.name}
-                className="flex items-center justify-between rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-4"
-              >
-                <div>
-                  <p className="text-sm font-semibold text-slate-100">
-                    {bank.name}
-                  </p>
-                  <p className="text-xs text-slate-400">{bank.note}</p>
-                </div>
-                <button className="rounded-full border border-slate-700/80 px-3 py-1 text-xs font-semibold text-slate-200 transition hover:border-slate-500">
-                  Pilih
-                </button>
-              </div>
-            ))}
-          </div>
-          <button className="mt-4 w-full rounded-full border border-slate-700/80 px-4 py-3 text-sm font-semibold text-slate-200 transition hover:border-slate-500">
-            Tambah rekening baru
-          </button>
+      <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+        <h2 className="text-lg font-semibold text-zinc-900">
+          Informasi penarikan
+        </h2>
+        <div className="mt-4 rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-4 text-sm text-zinc-700">
+          Saldo tersedia:{" "}
+          <WalletBalance initialBalance={balance} className="font-semibold" />
         </div>
-
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-5">
-          <h2 className="font-heading text-lg">Nominal tarik</h2>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {quickAmount.map((item) => (
-              <button
-                key={item}
-                className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-4 text-left text-sm font-semibold text-slate-200 transition hover:border-emerald-400/60"
-              >
-                {item}
-                <p className="mt-2 text-xs text-slate-400">
-                  Biaya admin Rp 2.500
-                </p>
-              </button>
-            ))}
-          </div>
-          <div className="mt-5 rounded-2xl border border-slate-800/60 bg-slate-900/60 p-4">
-            <label className="text-xs uppercase tracking-[0.2em] text-slate-500">
-              Nominal custom
-            </label>
-            <input
-              type="text"
-              placeholder="Masukkan nominal"
-              className="mt-3 w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500"
-            />
-          </div>
-          <button className="mt-5 w-full rounded-full bg-emerald-400/90 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300">
-            Tarik dana
-          </button>
-          <p className="mt-3 text-xs text-slate-400">
-            Saldo tersisa setelah tarik: Rp 2.200.000
-          </p>
+        <div className="mt-4">
+          <WithdrawForm />
         </div>
       </div>
     </section>

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { auth } from "@/auth";
+import { auth, signOut } from "@/auth";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
@@ -25,18 +25,22 @@ export default async function UserLayout({
             <Link href="/dashboard">Home</Link>
           </li>
           <li className="inline-block px-4 py-2 text-gray-700 hover:text-primary cursor-pointer">
-            <Link href="/wallet">Wallet</Link>
-          </li>
-          <li className="inline-block px-4 py-2 text-gray-700 hover:text-primary cursor-pointer">
             <Link href="/topup">Top Up</Link>
           </li>
           <li className="inline-block px-4 py-2 text-gray-700 hover:text-primary cursor-pointer">
-            <Link href="/history">History</Link>
+            <Link href="/withdraw">Withdraw</Link>
           </li>
         </ul>
-        <Button size="lg" asChild>
-          <Link href="/profile">Profile</Link>
-        </Button>
+        <form
+          action={async () => {
+            "use server";
+            await signOut();
+          }}
+        >
+          <Button size="lg" type="submit">
+            Keluar
+          </Button>
+        </form>
       </nav>
 
       <main className="mx-10 pb-10 mt-6">{children}</main>
