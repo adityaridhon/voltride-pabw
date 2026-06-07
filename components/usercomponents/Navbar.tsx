@@ -23,7 +23,6 @@ const Navbar = () => {
   return (
     <nav className="sticky top-0 z-40 w-full border-b border-zinc-100 bg-white/95 backdrop-blur-md shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] py-4 transition-all duration-300">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        {/* Left: Logo */}
         <div className="flex-1 flex justify-start">
           <Link href="/" className="flex items-center select-none">
             <h1 className="font-heading font-bold text-2xl tracking-tight text-zinc-900">
@@ -32,7 +31,6 @@ const Navbar = () => {
           </Link>
         </div>
 
-        {/* Center: Desktop Navigation Links */}
         <div className="hidden md:flex justify-center">
           <ul className="flex items-center gap-8 text-[15px] font-medium font-sans">
             {navItems.map((item) => {
@@ -45,7 +43,7 @@ const Navbar = () => {
                     href={item.href}
                     className={cn(
                       "text-zinc-500 hover:text-[#00b488] transition-colors duration-200",
-                      isActive && "text-[#00b488] font-semibold"
+                      isActive && "text-[#00b488] font-semibold",
                     )}
                   >
                     {item.label}
@@ -59,7 +57,6 @@ const Navbar = () => {
           </ul>
         </div>
 
-        {/* Right: Desktop Action Button */}
         <div className="flex-1 flex justify-end items-center gap-4">
           <div className="hidden md:flex items-center">
             {session?.user ? (
@@ -83,7 +80,6 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile Toggle */}
           <button
             type="button"
             className="inline-flex items-center justify-center rounded-xl border border-zinc-100 bg-white p-2.5 text-zinc-700 shadow-sm transition hover:bg-zinc-50 md:hidden"
@@ -95,7 +91,6 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Drawer Menu */}
       {isOpen && (
         <div className="mt-4 rounded-xl border border-zinc-100 bg-zinc-50 p-4 shadow-inner md:hidden animate-in slide-in-from-top-2 duration-200 mx-4">
           <ul className="space-y-1.5 text-sm font-medium">
@@ -110,7 +105,8 @@ const Navbar = () => {
                     onClick={() => setIsOpen(false)}
                     className={cn(
                       "flex w-full items-center rounded-lg px-3 py-2 text-zinc-500 hover:bg-white hover:text-[#00b488] transition",
-                      isActive && "bg-white text-[#00b488] font-semibold shadow-sm"
+                      isActive &&
+                        "bg-white text-[#00b488] font-semibold shadow-sm",
                     )}
                   >
                     {item.label}
@@ -122,7 +118,11 @@ const Navbar = () => {
           <div className="mt-4 pt-4 border-t border-zinc-200">
             {session?.user ? (
               <div className="flex flex-col gap-2">
-                <Link href="/dashboard" onClick={() => setIsOpen(false)} className="w-full">
+                <Link
+                  href="/dashboard"
+                  onClick={() => setIsOpen(false)}
+                  className="w-full"
+                >
                   <button
                     type="button"
                     className="w-full rounded-xl bg-gradient-to-r from-[#006B4F] to-[#00D096] py-3 text-sm font-semibold text-white shadow text-center"
@@ -143,7 +143,11 @@ const Navbar = () => {
                 </button>
               </div>
             ) : (
-              <Link href="/login" onClick={() => setIsOpen(false)} className="w-full">
+              <Link
+                href="/login"
+                onClick={() => setIsOpen(false)}
+                className="w-full"
+              >
                 <button
                   type="button"
                   className="w-full rounded-xl bg-gradient-to-r from-[#006B4F] to-[#00D096] py-3 text-sm font-semibold text-white shadow text-center"
