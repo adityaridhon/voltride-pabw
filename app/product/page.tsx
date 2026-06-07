@@ -51,7 +51,7 @@ export default async function ProductPage() {
   return (
     <main className="min-h-screen bg-zinc-50 flex flex-col">
       <Navbar />
-      <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 flex-1">
+      <div className="mx-auto w-full max-w-7xl px-4 py-32 sm:px-6 lg:px-8 flex-1">
         <ProductCatalog mobils={catalogMobils} />
       </div>
     </main>

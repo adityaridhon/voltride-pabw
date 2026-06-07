@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 const HeroSection = () => {
   return (
-    <section className="flex flex-col lg:flex-row items-center justify-between px-6 lg:px-20 py-12 lg:py-20 gap-10 max-w-7xl mx-auto w-full">
+    <section className="flex flex-col lg:flex-row items-center justify-between px-6 lg:px-20 py-12 lg:py-32 gap-10 max-w-7xl mx-auto w-full">
       <div className="flex-1 space-y-6 text-center lg:text-left">
         <span className="text-xs font-heading font-bold uppercase tracking-wider text-[#006949]">
           The Future of Travel

@@ -64,7 +64,7 @@ const AboutJourneySection = () => {
       </div>
 
       <div className="w-full lg:w-1/2 relative">
-        <div className="relative w-full aspect-square lg:aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl bg-gray-100">
+        <div className="relative w-full aspect-square lg:aspect-4/3 rounded-3xl overflow-hidden shadow-2xl bg-gray-100">
           <Image
             src="https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&w=800&q=80"
             alt="VoltRide Blue EV"
