@@ -1,4 +1,5 @@
-import { auth } from "@/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "@/auth.config"; // Sesuaikan path jika berbeda folder
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
@@ -20,6 +21,9 @@ const PROTECTED_ROUTES: Record<string, string[]> = {
 
 const AUTH_ROUTES = ["/login", "/register"];
 const PUBLIC_ROUTES = ["/", "/api/auth"];
+
+// Inisialisasi auth khusus untuk lingkungan Edge / Middleware
+const { auth } = NextAuth(authConfig);
 
 export default auth(function middleware(req: NextRequest) {
   const { nextUrl } = req;

@@ -4,41 +4,24 @@ import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { authConfig } from "./auth.config";
 import type { Role } from "@/src/generated/prisma";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig, // Mengambil basis konfigurasi dari auth.config.ts
   adapter: PrismaAdapter(prisma),
   secret:
     process.env.AUTH_SECRET ||
     process.env.NEXTAUTH_SECRET ||
     "your-secret-key-change-in-production",
 
-  session: {
-    strategy: "jwt",
-  },
-
-  pages: {
-    signIn: "/login",
-    error: "/login",
-  },
-
   providers: [
     Credentials({
       name: "credentials",
-
       credentials: {
-        email: {
-          label: "Email",
-          type: "email",
-        },
-        password: {
-          label: "Password",
-          type: "password",
-        },
-        role: {
-          label: "Role",
-          type: "text",
-        },
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+        role: { label: "Role", type: "text" },
       },
 
       async authorize(credentials) {
@@ -49,14 +32,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const password = String(credentials?.password || "");
         const targetRole = credentials?.role;
 
-        if (!email || !password) {
-          return null;
-        }
+        if (!email || !password) return null;
 
         const user = await prisma.user.findFirst({
-          where: {
-            email,
-          },
+          where: { email },
           select: {
             id: true,
             name: true,
@@ -88,15 +67,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         ) {
           isPasswordValid = await bcrypt.compare(password, passwordInDb);
         } else {
-          // Untuk testing kalau password di database masih plain text
           isPasswordValid = password === passwordInDb;
         }
 
-
-        if (!isPasswordValid) {
-          return null;
-        }
-
+        if (!isPasswordValid) return null;
 
         return {
           id: String(user.id),
@@ -116,7 +90,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
   events: {
     async createUser({ user }) {
-      // Ensure every newly created OAuth user gets a wallet.
       await prisma.wallet.upsert({
         where: { userId: user.id! },
         update: {},
@@ -126,48 +99,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 
   callbacks: {
-    async signIn() {
-      return true;
-    },
+    ...authConfig.callbacks, // Mengambil callback dasar
 
-    async redirect({ url, baseUrl }) {
-      // If it's a relative url, it's safe to redirect
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      // Allows callback URLs on the same origin
-      else if (new URL(url).origin === baseUrl) return url;
-
-      return baseUrl;
-    },
-
-    async jwt({ token, user, account }) {
+    // Override jwt callback khusus untuk kebutuhan server-side (query database tambahan)
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.role = (user as { role: Role }).role;
       }
 
+      // Query database ini aman ditaruh di sini karena file auth.ts tidak akan di-import oleh middleware
       if (token.id && !token.role) {
         const dbUser = await prisma.user.findUnique({
-          where: {
-            id: token.id as string,
-          },
-          select: {
-            role: true,
-          },
+          where: { id: token.id as string },
+          select: { role: true },
         });
 
         token.role = dbUser?.role;
       }
 
       return token;
-    },
-
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as Role;
-      }
-
-      return session;
     },
   },
 });
