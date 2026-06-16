@@ -144,13 +144,13 @@ export default async function FleetManagementPage() {
 
                   return (
                     <Card key={mobil.id} className="border-none shadow-sm rounded-[32px] overflow-hidden flex flex-col bg-white">
-                      <div className="aspect-[4/3] relative bg-slate-100 p-4">
+                      <div className="aspect-4/3 relative bg-slate-100 p-4">
                         <img 
                           src={mobil.imageUrl || "https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=1000&auto=format&fit=crop"} 
                           alt={mobil.name}
                           className="absolute inset-0 w-full h-full object-cover"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                        <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent"></div>
                         <Badge className={`relative font-bold px-3 py-1 rounded-full text-[10px] tracking-wide border-none ${statusColor}`}>
                           {statusLabel}
                         </Badge>

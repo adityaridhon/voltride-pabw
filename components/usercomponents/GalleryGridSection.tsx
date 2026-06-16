@@ -12,7 +12,7 @@ const GalleryGridSection = () => {
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-700"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
           <div className="absolute bottom-0 left-0 p-8 w-full flex justify-between items-end">
             <div>
               <h3 className="text-white font-heading font-bold text-2xl">
@@ -33,7 +33,7 @@ const GalleryGridSection = () => {
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-700"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/80 to-transparent" />
           <div className="absolute bottom-0 left-0 p-6">
             <span className="text-secondary text-[10px] font-bold tracking-widest uppercase">
               Performance
@@ -51,7 +51,7 @@ const GalleryGridSection = () => {
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-700"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/80 to-transparent" />
           <div className="absolute bottom-0 left-0 p-6">
             <span className="text-secondary text-[10px] font-bold tracking-widest uppercase">
               Adventure
@@ -70,7 +70,7 @@ const GalleryGridSection = () => {
             className="object-cover group-hover:scale-105 transition-transform duration-700"
           />
           {/* Overlay Gradien untuk keterbacaan teks */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/30 to-transparent" />
 
           {/* Konten Teks di Dalam Gambar */}
           <div className="absolute bottom-0 left-0 p-6 w-full flex justify-between items-end">
@@ -95,7 +95,7 @@ const GalleryGridSection = () => {
             className="object-cover group-hover:scale-105 transition-transform duration-700"
           />
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/20 to-transparent" />
 
           <div className="absolute bottom-0 left-0 p-8 w-full">
             <span className="text-secondary text-xs font-bold tracking-widest uppercase">

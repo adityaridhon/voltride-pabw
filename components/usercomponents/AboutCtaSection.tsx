@@ -16,8 +16,6 @@ const AboutCtaSection = () => {
           <Link href="/product">
             <Button
               size="lg"
-              variant="gradient"
-              className="px-10 py-6 text-lg rounded-md shadow-lg shadow-secondary/20"
             >
               View The Fleet
             </Button>

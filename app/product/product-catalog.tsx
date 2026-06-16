@@ -251,7 +251,7 @@ export function MobilCard({
           />
         ) : (
           <div className="flex h-full items-center justify-center bg-linear-to-br from-zinc-50 to-zinc-100/80 relative">
-            <div className="absolute inset-0 bg-[radial-gradient(#e4e4e7_1px,transparent_1px)] bg-size-[16px_16px] opacity-40" />
+            <div className="absolute inset-0 bg-[radial-linear(#e4e4e7_1px,transparent_1px)] bg-size-[16px_16px] opacity-40" />
             <div className="relative flex flex-col items-center gap-2">
               <Car className="size-12 text-zinc-300/80 stroke-[1.5]" />
               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">No Image Available</span>
