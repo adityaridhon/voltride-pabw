@@ -20,7 +20,6 @@ function SubmitButton() {
   return (
     <Button
       type="submit"
-      variant="gradient"
       size="lg"
       className="w-full rounded-full"
       disabled={pending}
