@@ -2,6 +2,7 @@ import Navbar from "@/components/usercomponents/Navbar";
 import { prisma } from "@/lib/prisma";
 import ProductCatalog, { type CatalogMobil } from "./product-catalog";
 
+
 const ACTIVE_BOOKING_STATUSES = ["PENDING", "PAID"] as const;
 
 export default async function ProductPage() {
@@ -30,17 +31,15 @@ export default async function ProductPage() {
   const catalogMobils: CatalogMobil[] = mobils.map((mobil) => ({
     id: mobil.id,
     name: mobil.name,
-    brand: mobil.brand,
-    model: mobil.model,
-    color: mobil.color,
+    brand: mobil.brand ?? "",
+    model: mobil.model ?? "",
+    color: mobil.color ?? "",
     plateNumber: mobil.plateNumber,
     pricePerDay: mobil.pricePerDay,
-    totalUnit: mobil.totalUnit,
-    availableUnit: mobil.availableUnit,
     status: mobil.status,
     imageUrl: mobil.imageUrl,
-    mitraName: mobil.mitra.companyName,
-    mitraAddress: mobil.mitra.address,
+    mitraName: mobil.mitra.companyName ?? "",
+    mitraAddress: mobil.mitra.address ?? "",
     bookings: mobil.bookings.map((booking) => ({
       startDate: toDateKey(booking.startDate),
       endDate: toDateKey(booking.endDate),
@@ -51,7 +50,7 @@ export default async function ProductPage() {
   return (
     <main className="min-h-screen bg-zinc-50 flex flex-col">
       <Navbar />
-      <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 flex-1">
+      <div className="mx-auto w-full max-w-7xl px-4 py-32 sm:px-6 lg:px-8 flex-1">
         <ProductCatalog mobils={catalogMobils} />
       </div>
     </main>

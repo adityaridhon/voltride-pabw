@@ -6,6 +6,8 @@ import Image from "next/image";
 import { useState } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -44,13 +46,15 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex w-full bg-white text-zinc-900">
+    <div className="h-screen flex w-full bg-white text-zinc-900">
       {/* Left side - Image */}
       <div className="hidden lg:flex w-1/2 relative bg-emerald-950">
-        <div className="absolute inset-0 bg-emerald-900/40 mix-blend-multiply z-10" />
-        <img
+        <div className="absolute inset-0 bg-black/60 z-10" />
+        <Image
           src="https://images.unsplash.com/photo-1617704548623-340376564e68?q=80&w=2000&auto=format&fit=crop"
           alt="Electric Car"
+          width={800}
+          height={600}
           className="absolute inset-0 w-full h-full object-cover"
         />
       </div>
@@ -106,9 +110,6 @@ export default function AdminLoginPage() {
                 <label className="block text-[10px] font-bold text-[#009B65] uppercase tracking-wider">
                   Password
                 </label>
-                <Link href="#" className="text-[10px] text-[#009B65] hover:underline font-medium">
-                  Forgot?
-                </Link>
               </div>
               <div className="relative">
                 <input
@@ -124,34 +125,14 @@ export default function AdminLoginPage() {
             </div>
 
             {/* Submit Button */}
-            <button
+            <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#00C689] hover:bg-[#00B07A] disabled:opacity-50 text-white font-medium rounded-md py-3 text-sm transition-colors mt-2"
+              className="w-full disabled:opacity-50 mt-2"
             >
-              {loading ? "Memproses..." : "Login"}
-            </button>
+              {loading ? "Processing..." : "Login"}
+            </Button>
           </form>
-
-          {/* Footer */}
-          <div className="pt-6 text-center text-xs text-zinc-500">
-            New to our ecosystem?{" "}
-            <Link href="/register/mitra" className="text-[#009B65] font-bold hover:underline">
-              Become a Partner
-            </Link>
-          </div>
-
-          {/* Quick fill untuk testing */}
-          <div className="border-t border-zinc-200 pt-4">
-            <p className="text-xs text-zinc-400 mb-2 text-center">Quick fill untuk testing:</p>
-            <button
-              type="button"
-              onClick={() => { setEmail("admin@voltride.id"); setPassword("Admin@12345"); }}
-              className="w-full text-xs bg-zinc-100 hover:bg-zinc-200 text-zinc-600 rounded-lg py-2 transition-colors"
-            >
-              Isi data Admin
-            </button>
-          </div>
 
         </div>
       </div>

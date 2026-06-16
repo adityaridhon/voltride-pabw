@@ -13,7 +13,7 @@ export default function HeaderMitra({ title = "Dashboard Overview" }: { title?: 
   const initials = userName.slice(0, 2).toUpperCase()
 
   return (
-    <header className="flex items-center justify-between px-8 py-4 border-b bg-white h-[72px] shrink-0">
+    <header className="flex items-center justify-between px-8 py-4 border-b bg-white h-18 shrink-0">
       <div className="flex items-center gap-4">
         <button onClick={toggle} className="text-gray-500 hover:text-gray-900">
           <Menu size={20} />

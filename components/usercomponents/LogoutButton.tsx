@@ -12,8 +12,11 @@ export default function LogoutButton() {
   const handleLogout = async () => {
     try {
       setIsLoading(true);
+
       await logoutUser();
-      router.push("/login");
+
+      router.refresh();
+      router.replace("/");
     } catch (error) {
       console.error("Logout failed:", error);
     } finally {
@@ -26,7 +29,6 @@ export default function LogoutButton() {
       onClick={handleLogout}
       disabled={isLoading}
       variant="outline"
-      size="lg"
     >
       {isLoading ? "Logging out..." : "Logout"}
     </Button>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useFormState, useFormStatus } from "react-dom";
+import { useEffect, useRef, useState, useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { updateProfile } from "@/actions/user.actions";
 import { Button } from "@/components/ui/button";
 
@@ -47,7 +47,7 @@ function SubmitButton() {
 }
 
 export default function ProfileForm({ name, email, phone }: ProfileFormProps) {
-  const [state, formAction] = useFormState(updateProfile, initialState);
+  const [state, formAction] = useActionState(updateProfile, initialState);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastVariant, setToastVariant] = useState<"success" | "error">(
     "success",

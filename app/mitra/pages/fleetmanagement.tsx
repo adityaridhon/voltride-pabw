@@ -5,7 +5,8 @@ import HeaderMitra from "@/app/mitra/components/headermitra";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, Pencil, Trash2, ArrowRight, MoreHorizontal } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
+import DeleteCarButton from "@/components/usercomponents/CarDeleteButton";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { deleteArmada } from "@/actions/armada.actions";
@@ -61,8 +62,9 @@ export default async function FleetManagementPage() {
                 <p className="text-[10px] font-extrabold text-emerald-500 uppercase tracking-widest mb-1">Fleet Overview</p>
                 <h1 className="text-4xl font-bold text-slate-800 tracking-tight">Fleet Management</h1>
               </div>
-              <Link href="/mitra/fleet/add">
-                <Button className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-6 py-6 rounded-xl shadow-sm">
+              <Link href="/mitra/fleet/create">
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
                   Add New Car
                 </Button>
               </Link>
@@ -154,48 +156,34 @@ export default async function FleetManagementPage() {
                         </Badge>
                       </div>
                       
-                      <div className="p-8 flex flex-col flex-1">
-                        <div className="flex justify-between items-start">
+                      <div className="p-8 flex flex-col flex-1 itmes-center">
+                        <div className="flex justify-between items-start font-heading">
                           <div>
                             <h3 className="text-xl font-extrabold text-slate-800">{mobil.name}</h3>
                             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">
                               {mobil.brand} {mobil.model} • {formattedPrice}/day
                             </p>
                           </div>
-                          <div className="text-right">
-                            <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest mb-0.5">Plate</p>
-                            <p className="text-sm font-bold text-emerald-500 leading-tight">{mobil.plateNumber}</p>
-                          </div>
                         </div>
                         
                         <div className="flex gap-3 mt-6">
-                          <div className="bg-slate-100 text-slate-700 px-3 py-2 rounded-xl flex items-center gap-2 text-xs font-bold flex-1 justify-center">
-                            <Users size={14} className="text-emerald-500" />
-                            5 SEATS
-                          </div>
                           <div className="bg-slate-100 text-slate-700 px-3 py-2 rounded-xl flex items-center gap-2 text-xs font-bold flex-1 justify-center">
                             <div className="w-3 h-3 rounded-full border-2 border-emerald-500" style={{ backgroundColor: mobil.color || "grey" }}></div>
                             {mobil.color?.toUpperCase() || "N/A"}
                           </div>
                         </div>
 
-                        <div className="mt-auto pt-8 flex items-center justify-between">
+                        <div className="mt-auto pt-8 flex items-center justify-right">
                           <div className="flex gap-2">
                             <Link href={`/mitra/fleet/edit/${mobil.id}`}>
-                              <button className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors">
+                              <Button size="lg" variant="outline">
                                 <Pencil size={16} />
-                              </button>
+                              </Button>
                             </Link>
-                            <form action={handleDelete}>
-                              <input type="hidden" name="id" value={mobil.id} />
-                              <button type="submit" className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors">
-                                <Trash2 size={16} />
-                              </button>
-                            </form>
+                            <DeleteCarButton
+                              armadaId={mobil.id}
+                            />
                           </div>
-                          <span className="text-slate-500 font-bold text-[10px] uppercase tracking-widest">
-                            {mobil.status === "INACTIVE" ? "Rented" : mobil.status === "MAINTENANCE" ? "In Service" : "Available"}
-                          </span>
                         </div>
                       </div>
                     </Card>

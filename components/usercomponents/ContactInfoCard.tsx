@@ -6,12 +6,12 @@ const ContactInfoCard = () => {
     <div className="space-y-6">
       <div className="bg-neutral-50 border border-neutral-100 rounded-3xl p-8 space-y-8">
         <div className="flex items-start gap-4">
-          <div className="p-3 bg-[#00C389]/10 text-[#006949] rounded-xl shrink-0">
+          <div className="p-3 bg-secondary/10 text-primary rounded-xl shrink-0">
             <MapPin className="w-5 h-5" />
           </div>
           <div>
             <h3 className="text-neutral-900 font-heading font-bold text-base">
-              Flagship Hub
+              IKN Headquarters
             </h3>
             <p className="text-gray-500 font-heading text-sm mt-1 leading-relaxed">
               The Glass Tower, Level 42
@@ -22,7 +22,7 @@ const ContactInfoCard = () => {
         </div>
 
         <div className="flex items-start gap-4">
-          <div className="p-3 bg-[#00C389]/10 text-[#006949] rounded-xl shrink-0">
+          <div className="p-3 bg-secondary/10 text-primary rounded-xl shrink-0">
             <Phone className="w-5 h-5" />
           </div>
           <div>
@@ -30,7 +30,7 @@ const ContactInfoCard = () => {
               Direct Line
             </h3>
             <p className="text-gray-500 font-heading text-sm mt-1 leading-relaxed">
-              +1 (888) KINETIC
+              +1 (888) VoltRide
               <br />
               +1 (555) 012-3456
             </p>
@@ -38,7 +38,7 @@ const ContactInfoCard = () => {
         </div>
 
         <div className="flex items-start gap-4">
-          <div className="p-3 bg-[#00C389]/10 text-[#006949] rounded-xl shrink-0">
+          <div className="p-3 bg-secondary/10 text-primary rounded-xl shrink-0">
             <AtSign className="w-5 h-5" />
           </div>
           <div>
@@ -46,9 +46,9 @@ const ContactInfoCard = () => {
               Digital Correspondence
             </h3>
             <p className="text-gray-500 font-heading text-sm mt-1 leading-relaxed break-all">
-              concierge@kinetic.ethereal
+              concierge@VoltRide.ethereal
               <br />
-              fleet@kinetic.ethereal
+              fleet@VoltRide.ethereal
             </p>
           </div>
         </div>
@@ -66,8 +66,8 @@ const ContactInfoCard = () => {
 
         <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-xl shadow-sm flex items-center gap-2 border border-neutral-100">
           <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#006949] opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#006949]"></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
           </span>
           <span className="text-[10px] font-heading font-bold text-neutral-800 tracking-wider uppercase">
             LIVE HUB STATUS: ACTIVE

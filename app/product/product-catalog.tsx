@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   CalendarDays,
   Car,
@@ -32,17 +33,15 @@ type MobilStatus = "ACTIVE" | "INACTIVE" | "MAINTENANCE";
 export type CatalogMobil = {
   id: string;
   name: string;
-  brand: string | null;
-  model: string | null;
-  color: string | null;
+  brand: string;
+  model: string;
+  color: string;
   plateNumber: string;
   pricePerDay: number;
-  totalUnit: number;
-  availableUnit: number;
   status: MobilStatus;
   imageUrl: string | null;
-  mitraName: string | null;
-  mitraAddress: string | null;
+  mitraName: string;
+  mitraAddress: string;
   bookings: Array<{
     startDate: string;
     endDate: string;
@@ -97,7 +96,7 @@ function Sidebar({
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Cari tipe, merek, model..."
+          placeholder="Search Type, Brand, or Model..."
           className="h-11 w-full rounded-2xl bg-zinc-100 pl-10 pr-4 text-[14px] text-zinc-800 placeholder-zinc-400 outline-none transition focus:bg-zinc-200/70"
         />
       </label>
@@ -108,6 +107,23 @@ function Sidebar({
           <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-800 shrink-0">Price Range</span>
           <div className="h-px bg-zinc-100 w-full" />
         </div>
+        <label className="mb-3 flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-2.5 shadow-sm">
+          <span className="shrink-0 text-xs font-semibold text-zinc-500">Rp</span>
+          <input
+            type="number"
+            min={0}
+            max={MAX}
+            step={50000}
+            value={maxPrice}
+            onChange={(e) => {
+              const nextValue = Number(e.target.value);
+              if (Number.isNaN(nextValue)) return;
+              setMaxPrice(Math.min(Math.max(nextValue, 0), MAX));
+            }}
+            className="w-full bg-transparent text-sm font-semibold text-zinc-900 outline-none placeholder:text-zinc-400"
+            placeholder="Max Price"
+          />
+        </label>
         <input
           type="range"
           min={0}
@@ -126,11 +142,11 @@ function Sidebar({
       {/* MEREK divider */}
       <div>
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-800 shrink-0">Merek</span>
+          <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-800 shrink-0">BRAND</span>
           <div className="h-px bg-zinc-100 w-full" />
         </div>
         {brands.length === 0 ? (
-          <p className="text-xs text-zinc-400">Tidak ada merek tersedia</p>
+          <p className="text-xs text-zinc-400">No Brand Available</p>
         ) : (
           <ul className="space-y-3.5 text-sm text-zinc-700">
             {brands.map((brand) => {
@@ -173,11 +189,11 @@ function Sidebar({
       {/* WARNA divider */}
       <div>
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-800 shrink-0">Warna</span>
+          <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-800 shrink-0">Color</span>
           <div className="h-px bg-zinc-100 w-full" />
         </div>
         {colors.length === 0 ? (
-          <p className="text-xs text-zinc-400">Tidak ada pilihan warna</p>
+          <p className="text-xs text-zinc-400">No Color Options Available</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {colors.map((color) => {
@@ -211,7 +227,7 @@ function Sidebar({
 }
 
 // --- Car Card ---
-function MobilCard({
+export function MobilCard({
   mobil,
   onViewDetails,
 }: {
@@ -250,7 +266,7 @@ function MobilCard({
             </span>
           ) : (
             <span className="rounded-full bg-red-500 px-3.5 py-1.5 text-[11px] font-bold text-white shadow-sm tracking-wide">
-              {availability === "MAINTENANCE" ? "Maintenance" : availability === "FULL" ? "Full" : "Inactive"}
+              {availability === "MAINTENANCE" ? "Maintenance" : "Inactive"}
             </span>
           )}
         </div>
@@ -259,13 +275,13 @@ function MobilCard({
       {/* Body */}
       <div className="p-6">
         {/* Name + Brand + Price */}
-        <div className="flex items-start justify-between gap-4 mb-4">
+        <div className="flex items-start justify-between gap-4 mb-4 font-heading">
           <div>
-            <h3 className="text-[20px] font-bold text-zinc-900 tracking-tight leading-none mb-2">
+            <h3 className="font-extrabold text-neutral-900 text-lg tracking-tight line-clamp-1">
               {mobil.name}
             </h3>
-            <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">
-              {mobil.brand ?? "VoltRide Partner"}
+            <p className="text-[10px] font-bold text-primary uppercase tracking-wider block mt-1">
+              {mobil.brand} {mobil.model || ""}
             </p>
           </div>
           <div className="text-right">
@@ -273,22 +289,8 @@ function MobilCard({
               {formatter.format(mobil.pricePerDay)}
             </span>
             <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-0.5">
-              / HARI
+              / DAY
             </p>
-          </div>
-        </div>
-
-        {/* Availability Bar */}
-        <div className="mb-5">
-          <div className="flex items-center justify-between text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1.5">
-            <span>Ketersediaan Unit</span>
-            <span className="text-xs font-bold text-zinc-700 normal-case tracking-normal">{mobil.availableUnit}/{mobil.totalUnit} unit</span>
-          </div>
-          <div className="h-1.5 w-full rounded-full bg-zinc-100">
-            <div
-              className="h-1.5 rounded-full bg-[#00b488] transition-all duration-500"
-              style={{ width: `${(mobil.availableUnit / Math.max(mobil.totalUnit, 1)) * 100}%` }}
-            />
           </div>
         </div>
 
@@ -299,27 +301,36 @@ function MobilCard({
             <div className="flex items-center gap-2.5 rounded-2xl bg-zinc-50 px-3.5 py-2.5">
               <Car className="size-3.5 text-[#00b488] shrink-0" />
               <div className="min-w-0">
-                <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider leading-none mb-0.5">Merek</p>
+                <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider leading-none mb-0.5">Brand</p>
                 <p className="text-[11px] font-bold text-zinc-800 leading-tight truncate">{mobil.brand}</p>
               </div>
             </div>
           )}
           {/* Spec 2: Model */}
-          {mobil.model && (
+          {mobil.color && (
             <div className="flex items-center gap-2.5 rounded-2xl bg-zinc-50 px-3.5 py-2.5">
               <Gauge className="size-3.5 text-[#00b488] shrink-0" />
               <div className="min-w-0">
-                <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider leading-none mb-0.5">Model</p>
-                <p className="text-[11px] font-bold text-zinc-800 leading-tight truncate">{mobil.model}</p>
+                <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider leading-none mb-0.5">Color</p>
+                <p className="text-[11px] font-bold text-zinc-800 leading-tight truncate">{mobil.color}</p>
               </div>
             </div>
           )}
           {/* Spec 3: Lokasi */}
-          {mobil.mitraAddress && (
-            <div className="col-span-2 flex items-center gap-2.5 rounded-2xl bg-zinc-50 px-3.5 py-2.5">
+          {mobil.mitraName && (
+            <div className="col-span-1 flex items-center gap-2.5 rounded-2xl bg-zinc-50 px-3.5 py-2.5">
               <Zap className="size-3.5 text-[#00b488] shrink-0" />
               <div className="min-w-0">
-                <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider leading-none mb-0.5">Lokasi</p>
+                <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider leading-none mb-0.5">Partner</p>
+                <p className="text-[11px] font-bold text-zinc-800 leading-tight truncate">{mobil.mitraName}</p>
+              </div>
+            </div>
+          )}
+          {mobil.mitraAddress && (
+            <div className="col-span-1 flex items-center gap-2.5 rounded-2xl bg-zinc-50 px-3.5 py-2.5">
+              <Zap className="size-3.5 text-[#00b488] shrink-0" />
+              <div className="min-w-0">
+                <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider leading-none mb-0.5">Location</p>
                 <p className="text-[11px] font-bold text-zinc-800 leading-tight truncate">{mobil.mitraAddress}</p>
               </div>
             </div>
@@ -327,13 +338,15 @@ function MobilCard({
         </div>
 
         {/* Booking Button */}
-        <button
-          onClick={onViewDetails}
-          disabled={!isAvailable}
-          className="w-full h-11 rounded-2xl bg-zinc-100 text-sm font-semibold text-zinc-700 hover:bg-[#e4e4e7] hover:text-zinc-800 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-        >
-          Booking Now
-        </button>
+        <Link href={`/product/${mobil.id}`}>
+          <Button
+            disabled={!isAvailable}
+            className="w-full"
+            size="lg"
+          >
+            Booking Now
+          </Button>
+        </Link>
       </div>
     </div>
   );
@@ -527,12 +540,12 @@ export default function ProductCatalog({ mobils }: { mobils: CatalogMobil[] }) {
 
       {/* Hero Header */}
       <div className="mb-8 font-sans">
-        <p className="text-[11px] font-bold uppercase tracking-widest text-[#00b488] mb-3">
+        <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">
           PREMIUM EV RENTAL
         </p>
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
           <h1 className="text-3xl sm:text-4xl md:text-[44px] font-extrabold text-zinc-900 leading-[1.1] tracking-tight shrink-0">
-            The Future<br />is Volt<span className="text-[#00b488]">Ride</span>
+            The Future<br />is Volt<span className="text-secondary">Ride</span>
           </h1>
           <div className="flex items-center gap-1 rounded-full bg-zinc-100 p-1 text-sm shadow-sm border border-zinc-200/20 w-full sm:w-fit sm:shrink-0">
             <button
@@ -580,7 +593,7 @@ export default function ProductCatalog({ mobils }: { mobils: CatalogMobil[] }) {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Cari tipe, merek, model..."
+              placeholder="Search type, brand, model..."
               className="h-11 w-full rounded-2xl bg-zinc-100 pl-10 pr-4 text-sm outline-none transition focus:bg-zinc-200/70"
             />
           </label>
@@ -604,13 +617,14 @@ export default function ProductCatalog({ mobils }: { mobils: CatalogMobil[] }) {
 
               {filteredMobils.length > visibleCount && (
                 <div className="flex justify-center pt-4">
-                  <button
+                  <Button
                     type="button"
                     onClick={() => setPagination({ filterKey, visibleCount: visibleCount + 4 })}
-                    className="rounded-2xl border border-zinc-200 bg-white px-8 py-3 text-sm font-bold text-zinc-700 shadow-sm hover:border-zinc-300 hover:bg-zinc-50 active:scale-95 transition-all cursor-pointer"
+                    variant="outline"
+                    size="lg"
                   >
                     Show More
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
@@ -622,7 +636,7 @@ export default function ProductCatalog({ mobils }: { mobils: CatalogMobil[] }) {
 }
 
 // --- Calendar Grid (unchanged logic) ---
-function CalendarGrid({
+export function CalendarGrid({
   month, bookedDates, startDate, endDate, onPrevious, onNext, onDateClick,
 }: {
   month: Date; bookedDates: Map<string, number>;
@@ -660,7 +674,7 @@ function CalendarGrid({
             <button
               key={dateKey} type="button" disabled={disabled} onClick={() => onDateClick(dateKey)}
               className={cn(
-                "relative aspect-square rounded-lg border text-sm transition",
+                "relative aspect-square rounded-lg border text-sm transition bg-gray-100",
                 selected && "border-primary bg-primary text-white",
                 inRange && !selected && "border-primary/20 bg-primary/10 text-primary",
                 !selected && !inRange && "border-transparent hover:bg-zinc-100",
@@ -673,8 +687,9 @@ function CalendarGrid({
         })}
       </div>
       <div className="mt-3 flex flex-wrap gap-3 text-xs text-zinc-400">
-        <Legend color="bg-primary" label="Dipilih" />
-        <Legend color="bg-red-400" label="Sudah dibooking" />
+        <Legend color="bg-gray-100" label="Ready" />
+        <Legend color="bg-primary" label="Choosen" />
+        <Legend color="bg-red-400" label="Booked" />
       </div>
     </div>
   );
@@ -698,10 +713,34 @@ function Legend({ color, label }: { color: string; label: string }) {
   );
 }
 
-function getAvailabilityStatus(mobil: CatalogMobil) {
-  if (mobil.status === "MAINTENANCE") return "MAINTENANCE";
-  if (mobil.status === "INACTIVE") return "INACTIVE";
-  if (mobil.availableUnit < 1) return "FULL";
+function getAvailabilityStatus(
+  mobil: CatalogMobil
+) {
+  if (
+    mobil.status ===
+    "MAINTENANCE"
+  ) {
+    return "MAINTENANCE";
+  }
+
+  const today = new Date();
+
+  const rented =
+    mobil.bookings.some(
+      (booking) =>
+        booking.status === "PAID" &&
+        new Date(
+          booking.startDate
+        ) <= today &&
+        new Date(
+          booking.endDate
+        ) >= today
+    );
+
+  if (rented) {
+    return "RENTED";
+  }
+
   return "AVAILABLE";
 }
 

@@ -15,6 +15,7 @@ import { ReceiptText, CarFront, Wallet } from "lucide-react"
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import MitraChat from "@/app/mitra/components/MitraChat";
 
 export default async function DashboardMitra() {
   const session = await auth();
@@ -164,7 +165,7 @@ export default async function DashboardMitra() {
                 <Badge variant="secondary" className="bg-emerald-50 text-emerald-600 hover:bg-emerald-50">Live</Badge>
               </CardHeader>
               <CardContent>
-                <p className="text-sm font-medium text-gray-500 mb-1">Total Transaksi</p>
+                <p className="text-sm font-medium text-gray-500 mb-1">Transactions</p>
                 <p className="text-3xl font-bold text-gray-900">{totalTransactions}</p>
                 <p className="text-xs text-gray-500 mt-2">All time rentals booked</p>
                 <div className="w-full bg-gray-100 rounded-full h-1.5 mt-4">
@@ -181,7 +182,7 @@ export default async function DashboardMitra() {
                 <Badge variant="secondary" className="bg-gray-100 text-gray-600 hover:bg-gray-100">Fleet</Badge>
               </CardHeader>
               <CardContent>
-                <p className="text-sm font-medium text-gray-500 mb-1">Jumlah Mobil</p>
+                <p className="text-sm font-medium text-gray-500 mb-1">Cars</p>
                 <p className="text-3xl font-bold text-gray-900">{totalCars} Units</p>
                 <p className="text-xs text-gray-500 mt-2">{activeCars} Active · {rentedCars} Rented · {maintenanceCars} Service</p>
                 <div className="flex w-full h-1.5 mt-4 rounded-full overflow-hidden bg-gray-100">
@@ -206,7 +207,7 @@ export default async function DashboardMitra() {
                 <Badge variant="secondary" className="bg-emerald-50 text-emerald-600 hover:bg-emerald-50">Month</Badge>
               </CardHeader>
               <CardContent>
-                <p className="text-sm font-medium text-gray-500 mb-1">Pendapatan Bulan Ini</p>
+                <p className="text-sm font-medium text-gray-500 mb-1">Revenue</p>
                 <p className="text-3xl font-bold text-emerald-500">{formattedRevenue}</p>
                 <p className="text-xs text-gray-500 mt-2">Revenue generated this month</p>
                 <div className="w-full bg-gray-100 rounded-full h-1.5 mt-4">
@@ -218,7 +219,7 @@ export default async function DashboardMitra() {
 
           {/* Bottom Section (Table & Banner) */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
+            <MitraChat />
             {/* Table Recent Activity */}
             <Card className="lg:col-span-2 shadow-sm border-gray-100">
               <CardHeader className="flex flex-row items-center justify-between border-b pb-4">

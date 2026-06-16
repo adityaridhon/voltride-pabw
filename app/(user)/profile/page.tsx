@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth-guard";
 import WalletBalance from "@/components/usercomponents/WalletBalance";
 import ProfileForm from "@/components/usercomponents/ProfileForm";
+import LogoutButton from "@/components/usercomponents/LogoutButton";
 
 const formatRupiah = (value: number) =>
   new Intl.NumberFormat("id-ID", {
@@ -77,253 +78,223 @@ export default async function ProfilePage() {
     : [];
 
   return (
-    <section className="space-y-6">
-      <header>
-        <p className="text-xs uppercase tracking-[0.2em] text-emerald-500">
-          Profil pengguna
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold text-zinc-900">
-          Ringkasan akun dan aktivitas
-        </h1>
-        <p className="mt-2 text-sm text-zinc-500">
-          Pantau saldo, pemesanan, dan informasi akun kamu di satu tempat.
-        </p>
-      </header>
+  <section className="space-y-6">
+    {/* PROFILE HEADER */}
+    <div className="relative overflow-hidden rounded-3xl">
+      <div className="absolute inset-0 bg-linear-to-r from-primary via-primary/60 to-secondary" />
 
-      <div className="grid gap-4 md:grid-cols-3">
-        {[
-          {
-            label: "Saldo dompet",
-            value: <WalletBalance initialBalance={balance} />,
-            note: "Siap dipakai",
-          },
-          {
-            label: "Pemesanan aktif",
-            value: activeBookingCount.toString(),
-            note: "Sedang berjalan",
-          },
-          {
-            label: "Transaksi bulan ini",
-            value: transactionCount.toString(),
-            note: "Total transaksi dompet",
-          },
-        ].map((item) => (
-          <div
-            key={item.label}
-            className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm"
-          >
-            <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">
-              {item.label}
-            </p>
-            <p className="mt-3 text-2xl font-semibold text-zinc-900">
-              {item.value}
-            </p>
-            <p className="mt-2 text-xs text-zinc-500">{item.note}</p>
+      <div className="relative flex flex-col gap-6 p-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex items-center gap-5">
+          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-zinc-200 text-3xl font-bold text-zinc-700">
+            {user?.name?.charAt(0).toUpperCase()}
           </div>
-        ))}
-      </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.15fr_1fr]">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <h2 className="text-lg font-semibold text-zinc-900">Edit profil</h2>
-          <div className="mt-4">
-            <ProfileForm
-              name={user?.name ?? ""}
-              email={user?.email ?? ""}
-              phone={user?.phone ?? ""}
-            />
+          <div>
+            <h1 className="text-3xl font-bold text-white">
+              {user?.name}
+            </h1>
+
+            <p className="text-zinc-300 mb-1">
+              {user?.email}
+            </p>
+
+            <LogoutButton/>
           </div>
         </div>
 
-        <div
-          id="wallet"
-          className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm"
-        >
-          <h2 className="text-lg font-semibold text-zinc-900">Dompet</h2>
-          <div className="mt-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">
-              Saldo aktif
+        <div className="flex flex-col gap-10 md:flex-row">
+          {/* BALANCE CARD */}
+          <div className="rounded-2xl bg-white p-5 shadow-xl min-w-70 space-y-2">
+            <p className="text-xs text-zinc-400">
+              Balance
             </p>
-            <p className="mt-2 text-2xl font-semibold text-zinc-900">
-              <WalletBalance initialBalance={balance} />
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
+
+            <div className="mt-1 space-y-4">
+              <div className="text-3xl font-bold text-emerald-500">
+                <WalletBalance initialBalance={balance} />
+              </div>
+
               <Link
                 href="/topup"
-                className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-semibold text-white transition hover:bg-emerald-600"
+                className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-600"
               >
-                Top up
-              </Link>
-              <Link
-                href="/withdraw"
-                className="rounded-full border border-zinc-200 px-3 py-1 text-xs font-semibold text-zinc-700 transition hover:border-zinc-300"
-              >
-                Tarik dana
+                Top-up
               </Link>
             </div>
           </div>
-          <div className="mt-5 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">
-              Zona waktu
-            </p>
-            <p className="mt-2 text-sm text-zinc-600">GMT+7 (WIB)</p>
-          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div className="grid grid-cols-3 mx-auto gap-2">
+      {/* EDIT PROFILE */}
+      <div className="rounded-2xl bg-white p-5 shadow-xl col-span-full lg:col-span-1 border border-zinc-200">
+          <h2 className="text-3xl font-bold text-zinc-900">
+                Edit{" "}
+                <span className="text-secondary">
+                  Profile
+                </span>
+          </h2>
+        <div className="mt-4">
+          <ProfileForm
+            name={user?.name ?? ""}
+            email={user?.email ?? ""}
+            phone={user?.phone ?? ""}
+          />
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+      <div className="flex flex-col gap-6 col-span-full lg:col-span-2">
+        {/* RECENT BOOKING */}
+        <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-zinc-900">
-              Riwayat pemesanan
-            </h2>
-            <Link
-              href="#history"
-              className="text-xs text-emerald-600 transition hover:text-emerald-700"
-            >
-              Lihat transaksi
-            </Link>
+              <h2 className="text-3xl font-bold text-zinc-900">
+               Recent{" "}
+                <span className="text-secondary">
+                  Booking
+                </span>
+              </h2>
+
+            <span className="text-sm text-zinc-500">
+              {activeBookingCount} Active Booking
+            </span>
           </div>
-          <div className="mt-4 space-y-3">
+
+          <div className="mt-5 space-y-3">
             {bookings.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-4 py-6 text-center text-sm text-zinc-500">
-                Belum ada pemesanan.
+              <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 p-6 text-center text-sm text-zinc-500">
+                No booking found.
               </div>
             ) : (
               bookings.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-2xl border border-zinc-200 bg-white px-4 py-4"
+                  className="rounded-2xl border border-zinc-200 p-4"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
-                      <p className="text-sm font-semibold text-zinc-900">
-                        {item.mobil?.name ?? "Mobil listrik"}
-                      </p>
-                      <p className="mt-1 text-xs text-zinc-500">
+                      <h3 className="font-semibold text-zinc-900">
+                        {item.mobil?.name}
+                      </h3>
+
+                      <p className="mt-1 text-sm text-zinc-500">
                         {formatDate(item.startDate)} -{" "}
                         {formatDate(item.endDate)}
                       </p>
                     </div>
-                    <span className="text-sm font-semibold text-emerald-600">
-                      {formatRupiah(Number(item.totalPrice))}
-                    </span>
+
+                    <div className="flex items-center gap-4">
+                      <span className="font-semibold text-emerald-600">
+                        {formatRupiah(
+                          Number(item.totalPrice)
+                        )}
+                      </span>
+
+                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                        {item.status}
+                      </span>
+                    </div>
                   </div>
-                  <p className="mt-2 text-xs text-zinc-500">
-                    Status: {item.status}
-                  </p>
                 </div>
               ))
             )}
           </div>
         </div>
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <h2 className="text-lg font-semibold text-zinc-900">Akses cepat</h2>
-          <div className="mt-4 space-y-3">
-            <Link
-              href="#wallet"
-              className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white px-4 py-4 text-sm text-zinc-700"
-            >
-              Lihat dompet
-              <WalletBalance
-                initialBalance={balance}
-                className="text-emerald-600"
-              />
-            </Link>
-            <Link
-              href="#history"
-              className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white px-4 py-4 text-sm text-zinc-700"
-            >
-              Riwayat transaksi
-              <span className="text-emerald-600">{transactionCount}</span>
-            </Link>
-          </div>
-        </div>
-      </div>
 
-      <div
-        id="history"
-        className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm"
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-emerald-500">
-              Riwayat transaksi
-            </p>
-            <h2 className="mt-2 text-2xl font-semibold text-zinc-900">
-              Aktivitas dompet terbaru
-            </h2>
-            <p className="mt-2 text-sm text-zinc-500">
-              Semua transaksi dompet VoltRide dalam 10 aktivitas terakhir.
-            </p>
-          </div>
-          <Link
-            href="#wallet"
-            className="text-xs text-emerald-600 transition hover:text-emerald-700"
-          >
-            Lihat saldo
-          </Link>
-        </div>
-
-        <div className="mt-5 overflow-x-auto">
-          {transactions.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 px-4 py-8 text-center text-sm text-zinc-500">
-              Belum ada transaksi dompet.
+        {/* TRANSACTION HISTORY */}
+        <div
+          id="history"
+          className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold text-zinc-900">
+                Transaction{" "}
+                <span className="text-secondary">
+                  History
+                </span>
+              </h2>
             </div>
-          ) : (
-            <table className="w-full min-w-[640px] border-collapse text-left text-sm">
-              <thead>
-                <tr className="text-xs uppercase tracking-[0.2em] text-zinc-400">
-                  <th className="px-4 py-3 font-semibold">ID</th>
-                  <th className="px-4 py-3 font-semibold">Jenis</th>
-                  <th className="px-4 py-3 font-semibold">Tanggal</th>
-                  <th className="px-4 py-3 font-semibold">Status</th>
-                  <th className="px-4 py-3 font-semibold">Nominal</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="border-t border-zinc-200 text-zinc-700"
-                  >
-                    <td className="px-4 py-4 text-emerald-600">
-                      {item.id.slice(0, 8).toUpperCase()}
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-zinc-400">⚡</span>
-                        <span className="font-medium text-zinc-900">
-                          {item.type}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="font-medium text-zinc-900">
-                        {formatDate(item.createdAt)}
-                      </div>
-                      <div className="text-xs text-zinc-500">
-                        {item.description ?? "Transaksi dompet"}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[item.status]}`}
-                      >
-                        {statusLabels[item.status]}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 font-semibold text-zinc-900">
-                      {item.direction === "CREDIT" ? "+" : "-"}
-                      {formatRupiah(Number(item.amount))}
-                    </td>
+          </div>
+
+          <div className="mt-6 overflow-x-auto">
+            {transactions.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 p-8 text-center text-sm text-zinc-500">
+                No Transaction.
+              </div>
+            ) : (
+              <table className="w-full min-w-225">
+                <thead>
+                  <tr className="bg-zinc-100 text-xs uppercase text-zinc-500">
+                    <th className="px-4 py-4 text-left">
+                      ID
+                    </th>
+                    <th className="px-4 py-4 text-left">
+                      Type
+                    </th>
+                    <th className="px-4 py-4 text-left">
+                      Date
+                    </th>
+                    <th className="px-4 py-4 text-left">
+                      Status
+                    </th>
+                    <th className="px-4 py-4 text-left">
+                      Amount
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                </thead>
+
+                <tbody>
+                  {transactions.map((item) => (
+                    <tr
+                      key={item.id}
+                      className="border-b border-zinc-100"
+                    >
+                      <td className="px-4 py-5 font-medium text-emerald-600">
+                        #{item.id.slice(0, 8)}
+                      </td>
+
+                      <td className="px-4 py-5">
+                        {item.type}
+                      </td>
+
+                      <td className="px-4 py-5">
+                        <div>
+                          {formatDate(item.createdAt)}
+                        </div>
+
+                        <div className="text-xs text-zinc-500">
+                          {item.description ??
+                            "Wallet transaction"}
+                        </div>
+                      </td>
+
+                      <td className="px-4 py-5">
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[item.status]}`}
+                        >
+                          {statusLabels[item.status]}
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-5 font-semibold">
+                        {item.direction === "CREDIT"
+                          ? "+"
+                          : "-"}
+                        {formatRupiah(
+                          Number(item.amount)
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
       </div>
-    </section>
-  );
+    </div>
+  </section>
+);
 }

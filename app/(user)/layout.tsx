@@ -3,7 +3,8 @@ import Link from "next/link";
 import { auth, signOut } from "@/auth";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import LogoutButton from "@/components/LogoutButton";
+import LogoutButton from "@/components/usercomponents/LogoutButton";
+import Navbar from "@/components/usercomponents/Navbar"
 
 export default async function UserLayout({
   children,
@@ -17,30 +18,8 @@ export default async function UserLayout({
 
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900">
-      <nav className="bg-white font-heading mx-10 h-18 z-50 px-10 py-5 flex flex-col justify-between items-center w-auto mt-4 rounded-lg shadow-md md:flex-row">
-        <Link href="/dashboard" className="font-bold text-2xl">
-          Volt<span className="text-primary">Ride</span>
-        </Link>
-        <ul className="flex flex-wrap items-center justify-center">
-          <li className="inline-block px-4 py-2 text-gray-700 hover:text-primary cursor-pointer">
-            <Link href="/dashboard">Home</Link>
-          </li>
-          <li className="inline-block px-4 py-2 text-gray-700 hover:text-primary cursor-pointer">
-            <Link href="/topup">Top Up</Link>
-          </li>
-          <li className="inline-block px-4 py-2 text-gray-700 hover:text-primary cursor-pointer">
-            <Link href="/withdraw">Withdraw</Link>
-          </li>
-        </ul>
-        <div className="flex gap-3">
-          <Button size="lg" asChild>
-            <Link href="/profile">Profile</Link>
-          </Button>
-          <LogoutButton />
-        </div>
-      </nav>
-
-      <main className="mx-10 pb-10 mt-6">{children}</main>
+      <Navbar/>
+      <main className="mx-10 py-24">{children}</main>
     </div>
   );
 }
