@@ -13,6 +13,7 @@ const HeroSection = () => {
   const [message, setMessage] = useState("");
   const [aiMessage, setAiMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [needLogin, setNeedLogin] = useState(false);
   const [results, setResults] = useState<any[]>([]);
   const [responseText, setResponseText] = useState("");
   const router = useRouter();
@@ -59,6 +60,14 @@ const HeroSection = () => {
 
 
     const commandData = await commandRes.json();
+
+    if (commandRes.status === 401) {
+      setNeedLogin(true);
+      setAiMessage(
+        "Please login to use the AI Assistant."
+      );
+      return;
+    }
   
     setResults(commandData.data ?? []);
     } catch (error) {

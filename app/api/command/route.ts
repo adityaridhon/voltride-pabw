@@ -8,7 +8,8 @@ export async function POST(req: NextRequest) {
 
     if (!session?.user?.id) {
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { success: false,
+          error: "You have to login to use this feature" },
         { status: 401 }
       );
     }

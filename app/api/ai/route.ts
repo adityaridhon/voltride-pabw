@@ -121,7 +121,7 @@ Rules:
       return Response.json({
         success: false,
         message:
-          "Maaf, saya hanya dapat membantu terkait pencarian dan pemesanan kendaraan VoltRide.",
+          "Sorry, I can only help with vehicle searches and bookings.",
       });
     }
 
@@ -149,12 +149,12 @@ Rules:
     return Response.json({
       success: false,
       message:
-        "Saya hanya dapat membantu pencarian kendaraan, booking, saldo, dan layanan VoltRide.",
+        "I can only help with vehicle searches, bookings, and VoltRide services.",
     });
   }
 
     if (typeof parsed?.action !== "string") {
-      throw new Error("Respons AI tidak berisi action yang valid");
+      throw new Error("AI Response not a valid action");
     }
 
     if (parsed.action === "create_car") {
