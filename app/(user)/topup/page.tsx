@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { confirmTopup } from "@/actions/user.actions";
+import { Button } from "@/components/ui/button";
+import { ArrowBigLeft } from 'lucide-react';
 
 const topupOptions = [50000, 100000, 150000, 250000, 500000, 1000000];
 
@@ -28,28 +30,28 @@ export default function TopupPage() {
 
   return (
     <section className="space-y-6">
-      <header>
+      <div className="flex justify-between items-center">
         <Link
           href="/profile"
-          className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-600 transition hover:text-emerald-700"
         >
-          <span aria-hidden="true">←</span>
-          Kembali ke profil
+          <Button>
+            <ArrowBigLeft className="h-4 w-4" />
+            Back to Profile
+          </Button>
         </Link>
-        <p className="mt-3 text-xs uppercase tracking-[0.2em] text-emerald-500">
-          Top Up
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold text-zinc-900">
-          Isi saldo dengan cepat
-        </h1>
-        <p className="mt-2 text-sm text-zinc-500">
-          Pilih nominal favorit dan metode pembayaran yang paling nyaman.
-        </p>
-      </header>
+        <div className="text-right">  
+          <p className="text-xs uppercase tracking-[0.2em] text-secondary">
+            Top Up
+          </p>
+          <h1 className="text-2xl font-semibold text-zinc-900">
+            Topup your balance
+          </h1>
+        </div>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <h2 className="text-lg font-semibold text-zinc-900">Nominal cepat</h2>
+          <h2 className="text-lg font-semibold text-zinc-900">Fast Choice</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {topupOptions.map((item) => (
               <button
@@ -66,15 +68,12 @@ export default function TopupPage() {
                 }`}
               >
                 {formatRupiah(item)}
-                <p className="mt-2 text-xs text-zinc-500">
-                  Tanpa biaya tambahan
-                </p>
               </button>
             ))}
           </div>
           <div className="mt-6 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
             <label className="text-xs uppercase tracking-[0.2em] text-zinc-400">
-              Nominal custom
+              Custom Amount (min {formatRupiah(1000)}, step 1000)
             </label>
             <input
               type="number"
@@ -82,12 +81,12 @@ export default function TopupPage() {
               step={1000}
               value={customAmount}
               onChange={(event) => setCustomAmount(event.target.value)}
-              placeholder="Masukkan nominal"
+              placeholder="Enter custom amount"
               className="mt-3 w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-700 placeholder:text-zinc-400"
             />
           </div>
           <div className="mt-4 rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-4 text-sm text-zinc-700">
-            Nominal dipilih:{" "}
+            Selected Amount:{" "}
             <span className="font-semibold">{formatRupiah(finalAmount)}</span>
           </div>
         </div>
@@ -97,11 +96,11 @@ export default function TopupPage() {
           className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm"
         >
           <h2 className="text-lg font-semibold text-zinc-900">
-            QRIS untuk pembayaran
+            QRIS for Payment
           </h2>
           <p className="mt-2 text-sm text-zinc-500">
-            Scan QRIS berikut, lalu klik tombol "sudah bayar" untuk menambah
-            saldo secara otomatis.
+            Scan the QRIS below, then click the "Pay" button to add
+            funds automatically.
           </p>
           <div className="mt-5 flex items-center justify-center rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 p-6">
             <Image
@@ -113,16 +112,16 @@ export default function TopupPage() {
             />
           </div>
           <div className="mt-4 rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-4 text-sm text-zinc-700">
-            Total yang akan ditambahkan:{" "}
+            Total Amount:{" "}
             <span className="font-semibold">{formatRupiah(finalAmount)}</span>
           </div>
           <input type="hidden" name="amount" value={finalAmount} />
-          <button
+          <Button
             type="submit"
             className="mt-5 w-full rounded-full bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600"
           >
-            Sudah bayar
-          </button>
+            Pay
+          </Button>
         </form>
       </div>
     </section>

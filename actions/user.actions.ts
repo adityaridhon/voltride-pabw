@@ -229,7 +229,7 @@ export async function requestWithdrawal(
         data: {
           userId,
           walletId: wallet.id,
-          type: "WITHDRAW",
+          type: "WITHDRAWAL",
           direction: "DEBIT",
           amount,
           status: "SUCCESS",
@@ -346,7 +346,6 @@ export async function confirmTopup(formData: FormData) {
     });
   });
 
-  revalidatePath("/dashboard");
   revalidatePath("/profile");
   revalidatePath("/wallet");
   revalidatePath("/history");

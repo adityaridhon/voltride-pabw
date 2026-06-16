@@ -34,7 +34,7 @@ export default function SidebarMitra() {
       }`}>
         <div className="flex items-center justify-between mb-10 px-2 min-w-[224px]">
           <span className="text-2xl font-bold text-gray-900">
-            Volt<span className="text-[#00C689]">Ride</span>
+            Volt<span className="text-secondary">Ride</span>
           </span>
           <button 
             onClick={() => setIsOpen(false)}
@@ -59,14 +59,11 @@ export default function SidebarMitra() {
         </Link>
       </nav>
 
-      <div className="mt-auto min-w-[224px]">
+      <div className="mt-auto min-w-56">
         <h4 className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Support</h4>
-        <Link href="#" className="flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-lg font-medium transition-colors">
-          <HelpCircle size={20} />
-          Help Center
-        </Link>
         <button 
-          onClick={() => signOut({ callbackUrl: "/login" })}
+          onClick={() => signOut({ callbackUrl: "/",redirect: true, })
+}
           className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-lg font-medium transition-colors"
         >
           <LogOut size={20} />

@@ -5,12 +5,12 @@ const GalleryHeroSection = () => {
     <section className="px-6 md:px-12 lg:px-24 max-w-7xl mx-auto pt-32 pb-12">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
         <div className="space-y-4">
-          <span className="text-[#006949] font-heading font-bold text-xs tracking-widest uppercase">
-            ARCHIVE 01 / VISUAL IDENTITY
+          <span className="text-primary font-heading font-bold text-xs tracking-widest uppercase">
+            VISUAL IDENTITY
           </span>
           <h1 className="text-5xl lg:text-7xl font-bold font-heading text-neutral-900 leading-tight">
             The Ethereal <br />
-            <span className="font-heading bg-gradient-to-r from-[#006A4B] to-[#00D094] bg-clip-text text-transparent">
+            <span className="font-heading text-secondary">
               Velocity.
             </span>
           </h1>

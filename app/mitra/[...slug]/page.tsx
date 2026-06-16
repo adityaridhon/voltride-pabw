@@ -12,7 +12,7 @@ export default async function MitraCatchAll({ params }: { params: Promise<{ slug
   if (path === "dashboard") return <DashboardMitra />;
   if (path === "fleet") return <FleetManagement />;
   if (path === "earnings") return <Earnings />;
-  if (path === "fleet/add") return <TambahFleet />;
+  if (path === "fleet/create") return <TambahFleet />;
   if (path.startsWith("fleet/edit/")) {
     const carId = resolvedParams.slug[2];
     return <EditFleet carId={carId} />;

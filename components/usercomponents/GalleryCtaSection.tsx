@@ -15,20 +15,22 @@ const GalleryCtaSection = () => {
         </h2>
 
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-          <Button
-            size="lg"
-            variant="gradient"
-            className="px-10 py-6 text-lg rounded-md shadow-lg shadow-[#00C389]/20"
-          >
-            View The Fleet
-          </Button>
+          <Link href="/product">
+            <Button
+              size="lg"
+            >
+              View The Fleet
+            </Button>
+          </Link>
 
-          <Button
-            size="lg"
-            className="px-10 py-6 text-lg rounded-md shadow-l bg-gray-200 text-neutral-900 font-semibold hover:bg-gray-300 transition-colors w-full sm:w-auto"
-          >
-            Contact Us
-          </Button>
+          <Link href="/contact">
+            <Button
+              size="lg"
+              variant="outline"
+            >
+              Contact Us
+            </Button>
+          </Link>
         </div>
       </div>
     </section>

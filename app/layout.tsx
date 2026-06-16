@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
+import {Toaster} from "sonner";
 
 const spaceGroteskHeading = Space_Grotesk({
   subsets: ["latin"],
@@ -15,6 +16,9 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 export const metadata: Metadata = {
   title: "VoltRide - Electric Vehicle Rental",
   description: "Platform sewa kendaraan listrik",
+  icons: {
+    icon: "/logo-voltride.svg",
+  }
 };
 
 export default async function RootLayout({
@@ -31,6 +35,7 @@ export default async function RootLayout({
     >
       <body className="antialiased">
         <SessionProvider session={session}>{children}</SessionProvider>
+        <Toaster />
       </body>
     </html>
   );

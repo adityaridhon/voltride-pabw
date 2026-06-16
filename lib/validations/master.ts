@@ -49,14 +49,21 @@ export const createArmadaSchema = z.object({
   namaKendaraan: z.string().min(2).max(150),
   merek: z.string().min(1).max(100).optional(),
   model: z.string().min(1).max(100).optional(),
+  color: z.string().min(1).max(50).optional(),
   nomorPlat: z.string().min(4).max(20),
   hargaPerHari: z.number().positive("Harga harus lebih dari 0"),
-  foto: z.string().url().optional(),
-  deskripsi: z.string().max(1000).optional(),
-  statusKetersediaan: z
-    .enum(["TERSEDIA", "DISEWA", "PERAWATAN"])
-    .optional()
-    .default("TERSEDIA"),
+  foto: z.string().optional(),
+  range: z.number().optional(),
+  acceleration: z.number().optional(),
+  battery: z.number().optional(),
+  chargingTime: z.string().optional(),
+  seat: z.number().optional(),
+  statusKetersediaan: z.enum([
+    "AVAILABLE",
+    "MAINTENANCE",
+    "INACTIVE",
+  ])
+    .default("AVAILABLE"),
 });
 
 export const updateArmadaSchema = z.object({
@@ -64,11 +71,11 @@ export const updateArmadaSchema = z.object({
   namaKendaraan: z.string().min(2).max(150).optional(),
   merek: z.string().min(1).max(100).optional(),
   model: z.string().min(1).max(100).optional(),
+  color: z.string().min(1).max(50).optional(),
   nomorPlat: z.string().min(4).max(20).optional(),
   hargaPerHari: z.number().positive().optional(),
-  foto: z.string().url().optional(),
-  deskripsi: z.string().max(1000).optional(),
-  statusKetersediaan: z.enum(["TERSEDIA", "DISEWA", "PERAWATAN"]).optional(),
+  foto: z.string().optional(),
+  statusKetersediaan: z.enum(["AVAILABLE", "MAINTENANCE", "INACTIVE"]).optional(),
 });
 
 export const deleteArmadaSchema = z.object({

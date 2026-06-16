@@ -19,31 +19,6 @@ import { AuthError } from "next-auth";
 
 // ─── REGISTER ─────────────────────────────────────────────────────────────────
 
-export async function registerUser(input: RegisterInput) {
-  return withErrorHandling(async () => {
-    const parsed = registerSchema.safeParse(input);
-    if (!parsed.success) {
-      throw new Error(parsed.error.errors[0].message);
-    }
-
-    const { name, email, password, phone } = parsed.data;
-
-    const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) throw new Error("Email sudah terdaftar.");
-
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword, phone, role: "USER" },
-      select: { id: true, email: true, role: true },
-    });
-
-    // Buat dompet otomatis
-    await prisma.wallet.create({ data: { userId: user.id } });
-
-    return user;
-  });
-}
 
 export async function registerAdmin(input: RegisterAdminInput) {
   return withErrorHandling(async () => {

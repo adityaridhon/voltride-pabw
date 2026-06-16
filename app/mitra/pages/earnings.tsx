@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Handshake, Wallet, Clock, Leaf, Search, Calendar, TrendingUp, ChevronLeft, ChevronRight, Zap } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import WithdrawModal from "@/app/mitra/components/WithdrawModal";
 
 export default async function EarningsPage() {
   const session = await auth();
@@ -133,14 +134,14 @@ export default async function EarningsPage() {
                 </div>
 
                 <div className="mt-8 z-10 text-center">
-                  <button className="w-full bg-white text-emerald-600 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 hover:bg-emerald-50 transition-colors shadow-sm mb-3">
-                    <Wallet size={18} />
-                    Withdraw Funds
-                  </button>
-                  <p className="text-[10px] text-emerald-100 font-medium">Payouts processed every 24-48 hours</p>
-                </div>
+                <WithdrawModal balance={balance} />
+
+                <p className="text-[10px] text-emerald-100 font-medium mt-3">
+                  Payouts processed every 24-48 hours
+                </p>
+              </div>
                 
-                <div className="absolute inset-0 bg-gradient-to-tr from-emerald-600/30 to-transparent"></div>
+                <div className="absolute inset-0 bg-linear-to-tr from-emerald-600/30 to-transparent"></div>
               </Card>
 
             </div>

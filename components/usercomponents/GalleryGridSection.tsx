@@ -22,7 +22,7 @@ const GalleryGridSection = () => {
                 Clinical precision meeting soulful design.
               </p>
             </div>
-            <div className="text-[#00C389]"></div>
+            <div className="text-secondary"></div>
           </div>
         </div>
 
@@ -35,7 +35,7 @@ const GalleryGridSection = () => {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
           <div className="absolute bottom-0 left-0 p-6">
-            <span className="text-[#00C389] text-[10px] font-bold tracking-widest uppercase">
+            <span className="text-secondary text-[10px] font-bold tracking-widest uppercase">
               Performance
             </span>
             <h3 className="text-white font-heading font-bold text-lg mt-1">
@@ -53,7 +53,7 @@ const GalleryGridSection = () => {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
           <div className="absolute bottom-0 left-0 p-6">
-            <span className="text-[#00C389] text-[10px] font-bold tracking-widest uppercase">
+            <span className="text-secondary text-[10px] font-bold tracking-widest uppercase">
               Adventure
             </span>
             <h3 className="text-white font-heading font-bold text-lg mt-1">
@@ -83,7 +83,7 @@ const GalleryGridSection = () => {
               </p>
             </div>
             {/* Ikon Petir (dipertahankan dari desain asli) */}
-            <div className="text-[#00C389] text-xl pb-1">⚡</div>
+            <div className="text-secondary text-xl pb-1">⚡</div>
           </div>
         </div>
 
@@ -98,7 +98,7 @@ const GalleryGridSection = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 
           <div className="absolute bottom-0 left-0 p-8 w-full">
-            <span className="text-[#00C389] text-xs font-bold tracking-widest uppercase">
+            <span className="text-secondary text-xs font-bold tracking-widest uppercase">
               Cockpit Experience
             </span>
             <h3 className="text-white font-heading font-bold text-2xl mt-1">
@@ -120,7 +120,7 @@ const GalleryGridSection = () => {
               className="object-cover"
             />
           </div>
-          <span className="text-[#00C389] text-[10px] font-bold tracking-widest uppercase">
+          <span className="text-secondary text-[10px] font-bold tracking-widest uppercase">
             SUSTAINABILITY
           </span>
           <h3 className="text-neutral-900 font-heading font-bold text-base mt-1">
@@ -140,11 +140,11 @@ const GalleryGridSection = () => {
               className="object-cover"
             />
           </div>
-          <span className="text-[#00C389] text-[10px] font-bold tracking-widest uppercase">
+          <span className="text-secondary text-[10px] font-bold tracking-widest uppercase">
             PERFORMANCE
           </span>
           <h3 className="text-neutral-900 font-heading font-bold text-base mt-1">
-            Kinetic Drive Core
+            VoltRide Drive Core
           </h3>
           <p className="text-gray-500 text-xs mt-2">
             Dual-motor configuration for instant torque delivery.
@@ -160,7 +160,7 @@ const GalleryGridSection = () => {
               className="object-cover"
             />
           </div>
-          <span className="text-[#00C389] text-[10px] font-bold tracking-widest uppercase">
+          <span className="text-secondary text-[10px] font-bold tracking-widest uppercase">
             EXPERIENCE
           </span>
           <h3 className="text-neutral-900 font-heading font-bold text-base mt-1">

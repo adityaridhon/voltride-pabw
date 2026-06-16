@@ -13,5 +13,5 @@ export default async function AddFleetPage() {
 
   if (!mitra) redirect("/unauthorized");
 
-  return <TambahDanEditFleet mode="add" mitraId={mitra.id} />;
+  return <TambahDanEditFleet mode="create" mitraId={mitra.id} />;
 }

@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { Menu, X, LogOut } from "lucide-react";
+import LoginDialog from "@/components/usercomponents/LoginDialog";
+import { Button } from "@/components/ui/button";
 
 const navItems = [
   { label: "Home", href: "/" },
@@ -47,7 +49,8 @@ function easeOut(t: number): number {
 const Navbar = () => {
   const [isOpen, setIsOpen] = React.useState(false);
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const [loginOpen, setLoginOpen] = React.useState(false);
+  const { data: session, status  } = useSession();
 
   const rawProgress = useScrollProgress(120);
   const progress = easeOut(rawProgress); // 0 = atas, 1 = sudah scroll
@@ -74,14 +77,14 @@ const Navbar = () => {
             <Link
               href={item.href}
               className={cn(
-                "text-zinc-500 hover:text-[#00b488] transition-colors duration-200",
-                isActive && "text-[#00b488] font-semibold"
+                "text-zinc-500 hover:text-secondary transition-colors duration-200",
+                isActive && "text-secondary font-semibold"
               )}
             >
               {item.label}
             </Link>
             {isActive && (
-              <span className="absolute bottom-0 left-0 right-0 h-[3px] rounded-full bg-[#00b488]" />
+              <span className="absolute bottom-0 left-0 right-0 h-0.75 rounded-full bg-[#00b488]" />
             )}
           </li>
         );
@@ -89,39 +92,39 @@ const Navbar = () => {
     </ul>
   );
 
-  const AuthButton = ({ compact = false }: { compact?: boolean }) => (
-    <>
-      {session?.user ? (
-        <Link href="/dashboard">
-          <button
-            type="button"
-            className={cn(
-              "rounded-xl bg-gradient-to-r from-[#006B4F] to-[#00D096] font-semibold text-white shadow-md shadow-emerald-950/10 hover:opacity-95 hover:scale-[1.02] active:scale-95 transition-all text-center",
-              compact
-                ? "px-5 py-2 text-[14px] min-w-[90px]"
-                : "px-8 py-2.5 text-[15px] min-w-[110px]"
-            )}
-          >
-            Profile
-          </button>
-        </Link>
-      ) : (
-        <Link href="/login">
-          <button
-            type="button"
-            className={cn(
-              "rounded-xl bg-gradient-to-r from-[#006B4F] to-[#00D096] font-semibold text-white shadow-md shadow-emerald-950/10 hover:opacity-95 hover:scale-[1.02] active:scale-95 transition-all text-center",
-              compact
-                ? "px-5 py-2 text-[14px] min-w-[90px]"
-                : "px-8 py-2.5 text-[15px] min-w-[110px]"
-            )}
+  const AuthButton = ({ compact = false }: { compact?: boolean }) => {
+    const userRole = session?.user?.role; 
+
+    let buttonLabel = "Profile";
+    let targetHref = "/profile";
+
+    if (userRole === "ADMIN") {
+      buttonLabel = "Admin Dashboard";
+      targetHref = "/admin/dashboard"; 
+    } else if (userRole === "MITRA") {
+      buttonLabel = "Partner Dashboard";
+      targetHref = "/mitra/dashboard"; 
+    }
+
+    return (
+      <>
+        {session?.user ? (
+          <Link href={targetHref}>
+            <Button size="lg">
+              {buttonLabel}
+            </Button>
+          </Link>
+        ) : (
+          <Button
+            onClick={() => setLoginOpen(true)}
+            size="lg"
           >
             Login
-          </button>
-        </Link>
-      )}
-    </>
-  );
+          </Button>
+        )}
+      </>
+    );
+  };
 
   return (
     <>
@@ -142,7 +145,7 @@ const Navbar = () => {
           <div className="flex-1 flex justify-start">
             <Link href="/" className="flex items-center select-none">
               <h1 className="font-bold text-2xl tracking-tight text-zinc-900">
-                Volt<span className="text-[#00b488] font-extrabold">Ride</span>
+                Volt<span className="text-secondary font-extrabold">Ride</span>
               </h1>
             </Link>
           </div>
@@ -157,14 +160,13 @@ const Navbar = () => {
             <div className="hidden md:flex items-center">
               <AuthButton />
             </div>
-            <button
-              type="button"
-              className="inline-flex items-center justify-center rounded-xl border border-zinc-100 bg-white p-2.5 text-zinc-700 shadow-sm transition hover:bg-zinc-50 md:hidden"
+            <Button
+              className="md:hidden"
               onClick={() => setIsOpen((prev) => !prev)}
               aria-label={isOpen ? "Tutup menu" : "Buka menu"}
             >
               {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -172,7 +174,7 @@ const Navbar = () => {
         <div
           className={cn(
             "md:hidden mx-4 overflow-hidden transition-all duration-300 ease-in-out",
-            isOpen ? "max-h-[500px] opacity-100 mt-4" : "max-h-0 opacity-0"
+            isOpen ? "max-h-125 opacity-100 mt-4" : "max-h-0 opacity-0"
           )}
         >
           <div className="rounded-xl border border-zinc-100 bg-zinc-50 p-4 shadow-inner">
@@ -200,32 +202,30 @@ const Navbar = () => {
             <div className="mt-4 pt-4 border-t border-zinc-200">
               {session?.user ? (
                 <div className="flex flex-col gap-2">
-                  <Link href="/dashboard" onClick={() => setIsOpen(false)}>
-                    <button
-                      type="button"
-                      className="w-full rounded-xl bg-gradient-to-r from-[#006B4F] to-[#00D096] py-3 text-sm font-semibold text-white shadow text-center"
-                    >
+                  <Link href="/profile" onClick={() => setIsOpen(false)}>
+                    <Button className="w-full">
                       Profile
-                    </button>
+                    </Button>
                   </Link>
-                  <button
-                    type="button"
+                  <Button
                     onClick={() => { setIsOpen(false); signOut(); }}
-                    className="w-full rounded-xl border border-zinc-200 bg-white py-3 text-sm font-medium text-red-600 hover:bg-red-50 flex items-center justify-center gap-2"
+                    className="w-full"
+                    variant="outline"
                   >
                     <LogOut className="size-4" />
                     <span>Logout</span>
-                  </button>
+                  </Button>
                 </div>
               ) : (
-                <Link href="/login" onClick={() => setIsOpen(false)}>
-                  <button
-                    type="button"
-                    className="w-full rounded-xl bg-gradient-to-r from-[#006B4F] to-[#00D096] py-3 text-sm font-semibold text-white shadow text-center"
-                  >
-                    Login
-                  </button>
-                </Link>
+                <Button
+                  onClick={() => {
+                    setIsOpen(false);
+                    setLoginOpen(true);
+                  }}
+                  className="w-full"
+                >
+                  Login
+                </Button>
               )}
             </div>
           </div>
@@ -287,6 +287,10 @@ const Navbar = () => {
           </div>
         </div>
       </nav>
+      <LoginDialog
+        open={loginOpen}
+        onOpenChange={setLoginOpen}
+      />
     </>
   );
 };

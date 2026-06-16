@@ -1,11 +1,13 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
+import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import type { Role } from "@/src/generated/prisma";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(prisma),
   secret:
     process.env.AUTH_SECRET ||
     process.env.NEXTAUTH_SECRET ||
@@ -47,12 +49,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const password = String(credentials?.password || "");
         const targetRole = credentials?.role;
 
-        console.log("=== LOGIN DEBUG ===");
-        console.log("email:", email);
-        console.log("hasPassword:", Boolean(password));
-
         if (!email || !password) {
-          console.log("LOGIN FAILED: email/password kosong");
           return null;
         }
 
@@ -68,10 +65,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             password: true,
           },
         });
-
-        console.log("userFound:", Boolean(user));
-        console.log("userEmail:", user?.email);
-        console.log("passwordInDbExists:", Boolean(user?.password));
 
         if (!user || !user.password) {
           console.log("LOGIN FAILED: user tidak ditemukan / password kosong");
@@ -99,14 +92,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           isPasswordValid = password === passwordInDb;
         }
 
-        console.log("passwordValid:", isPasswordValid);
 
         if (!isPasswordValid) {
-          console.log("LOGIN FAILED: password salah");
           return null;
         }
 
-        console.log("LOGIN SUCCESS:", user.email);
 
         return {
           id: String(user.id),
@@ -124,55 +114,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
 
+  events: {
+    async createUser({ user }) {
+      // Ensure every newly created OAuth user gets a wallet.
+      await prisma.wallet.upsert({
+        where: { userId: user.id! },
+        update: {},
+        create: { userId: user.id! },
+      });
+    },
+  },
+
   callbacks: {
-    async signIn({ user, account, profile }) {
-      // Handle Google OAuth sign-in
-      if (account?.provider === "google") {
-        try {
-          const email = user.email?.toLowerCase() || "";
-
-          // Cek apakah user sudah ada
-          let dbUser = await prisma.user.findUnique({
-            where: { email },
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              role: true,
-            },
-          });
-
-          // Jika belum ada, buat user baru dengan role USER
-          if (!dbUser) {
-            dbUser = await prisma.user.create({
-              data: {
-                email,
-                name: user.name || profile?.name || "Google User",
-                role: "USER",
-              },
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                role: true,
-              },
-            });
-
-            // Auto-create wallet untuk user baru
-            await prisma.wallet.create({ data: { userId: dbUser.id } });
-          }
-
-          // Update user object dengan data dari database
-          user.id = dbUser.id;
-          user.role = dbUser.role as Role;
-
-          return true;
-        } catch (error) {
-          console.error("Error in Google sign-in callback:", error);
-          return false;
-        }
-      }
-
+    async signIn() {
       return true;
     },
 

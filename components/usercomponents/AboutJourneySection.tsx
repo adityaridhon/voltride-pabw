@@ -16,7 +16,7 @@ const timelineData = [
   },
   {
     year: "2024",
-    title: "KINETIC Ethereal Launch",
+    title: "VoltRide Ethereal Launch",
     description:
       "Bedefining luxury rental with our custom-designed app and premium conclerge service.",
   },
@@ -27,18 +27,17 @@ const AboutJourneySection = () => {
     <section className="px-6 md:px-12 lg:px-24 max-w-7xl mx-auto py-20 flex flex-col-reverse lg:flex-row items-center gap-16">
       <div className="w-full lg:w-1/2 space-y-10">
         <div>
-          <span className="text-[#006949] font-heading font-bold text-xs tracking-widest uppercase">
+          <span className="text-primary font-heading font-bold text-xs tracking-widest uppercase">
             THE JOURNEY
           </span>
 
           <h1 className="text-5xl lg:text-5xl font-bold font-heading text-neutral-900 leading-tight">
-            From a Garage in Palo Alto to Global <br />
-            <span className="text-[#006949]">Ethereal Motion.</span>
+            From a Garage in Balikpapan to <span className="text-primary">Global</span><br />
           </h1>
 
           <p className="text-gray-600 font-heading text-sm leading-relaxed max-w-md">
             {
-              "Founded by a collective of engineers and designers, KINETIC was built to prove that the highest tier of travel could be achieved without compromise."
+              "Founded by a collective of engineers and designers, VoltRide was built to prove that the highest tier of travel could be achieved without compromise."
             }
           </p>
         </div>
@@ -46,7 +45,7 @@ const AboutJourneySection = () => {
         <div className="space-y-8 mt-8">
           {timelineData.map((item, index) => (
             <div key={index} className="flex gap-6">
-              <div className="text-[#006949] font-heading font-bold text-lg w-12 shrink-0 pt-0.5">
+              <div className="text-primary font-heading font-bold text-lg w-12 shrink-0 pt-0.5">
                 {item.year}
               </div>
 
@@ -73,7 +72,7 @@ const AboutJourneySection = () => {
           />
         </div>
 
-        <div className="absolute -z-10 -bottom-6 -right-6 w-full h-full border-2 border-[#00C389]/30 rounded-3xl" />
+        <div className="absolute -z-10 -bottom-6 -right-6 w-full h-full border-2 border-secondary/30 rounded-3xl" />
       </div>
     </section>
   );

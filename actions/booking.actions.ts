@@ -27,7 +27,7 @@ export async function createBookingAction(
   if (!session?.user?.id) {
     return {
       ok: false,
-      message: "Silakan login terlebih dahulu sebelum melakukan pemesanan.",
+      message: "Please login first before making a reservation.",
     };
   }
 
@@ -36,23 +36,23 @@ export async function createBookingAction(
   const endDateValue = String(formData.get("endDate") ?? "");
 
   if (!mobilId || !startDateValue || !endDateValue) {
-    return { ok: false, message: "Pilih mobil serta tanggal mulai dan selesai." };
+    return { ok: false, message: "Please select a car and specify start and end dates." };
   }
 
   const startDate = parseDate(startDateValue);
   const endDate = parseDate(endDateValue);
 
   if (!startDate || !endDate) {
-    return { ok: false, message: "Format tanggal tidak valid." };
+    return { ok: false, message: "Invalid date format." };
   }
 
   if (startDate > endDate) {
-    return { ok: false, message: "Tanggal selesai tidak boleh sebelum tanggal mulai." };
+    return { ok: false, message: "End date cannot be before start date." };
   }
 
   const today = startOfDay(new Date());
   if (startDate < today) {
-    return { ok: false, message: "Tanggal mulai tidak boleh sebelum hari ini." };
+    return { ok: false, message: "Start date cannot be before today." };
   }
 
   const mobil = await prisma.mobil.findUnique({
@@ -62,17 +62,21 @@ export async function createBookingAction(
       name: true,
       status: true,
       pricePerDay: true,
-      totalUnit: true,
-      availableUnit: true,
+
+      mitra: {
+        select: {
+          userId: true,
+        },
+      },
     },
   });
 
   if (!mobil) {
-    return { ok: false, message: "Mobil tidak ditemukan." };
+    return { ok: false, message: "Car not found." };
   }
 
-  if (mobil.status !== "ACTIVE" || mobil.availableUnit < 1) {
-    return { ok: false, message: "Mobil sedang tidak tersedia untuk dipesan." };
+ if (mobil.status !== "ACTIVE") {
+    return { ok: false, message: "Car is currently not available for booking." };
   }
 
   const totalDays = getTotalDays(startDate, endDate);
@@ -103,7 +107,7 @@ export async function createBookingAction(
           );
 
           if (bookedDate) {
-            throw new BookingActionError(`Tanggal ${formatDateId(bookedDate)} sudah dibooking.`);
+            throw new BookingActionError(`${formatDateId(bookedDate)} Already Booked.`);
           }
 
           const wallet = await tx.wallet.findUnique({
@@ -111,7 +115,7 @@ export async function createBookingAction(
           });
 
           if (!wallet) {
-            throw new BookingActionError("Wallet tidak ditemukan. Silakan hubungi admin.");
+            throw new BookingActionError("Wallet Not Found.");
           }
 
           const walletUpdate = await tx.wallet.updateMany({
@@ -125,7 +129,7 @@ export async function createBookingAction(
           });
 
           if (walletUpdate.count === 0) {
-            throw new BookingActionError("Saldo tidak cukup untuk menyelesaikan pemesanan.");
+            throw new BookingActionError("Balance not enough.");
           }
 
           const booking = await tx.booking.create({
@@ -140,6 +144,29 @@ export async function createBookingAction(
             },
           });
 
+          const mitraWallet = await tx.wallet.findUnique({
+            where: {
+              userId: mobil.mitra.userId,
+            },
+          });
+
+          if (!mitraWallet) {
+            throw new BookingActionError(
+              "Partner wallet not found."
+            );
+          }
+
+          await tx.wallet.update({
+            where: {
+              id: mitraWallet.id,
+            },
+            data: {
+              balance: {
+                increment: totalPrice,
+              },
+            },
+          })
+
           await tx.transaction.create({
             data: {
               userId: session.user.id,
@@ -150,6 +177,19 @@ export async function createBookingAction(
               amount: totalPrice,
               status: TransactionStatus.SUCCESS,
               description: `Pembayaran booking mobil ${mobil.name}`,
+            },
+          });
+
+          await tx.transaction.create({
+            data: {
+              userId: mobil.mitra.userId,
+              walletId: mitraWallet.id,
+              bookingId: booking.id,
+              type: TransactionType.BOOKING_PAYMENT,
+              direction: TransactionDirection.CREDIT,
+              amount: totalPrice,
+              status: TransactionStatus.SUCCESS,
+              description: `Pendapatan dari booking mobil ${mobil.name}`,
             },
           });
         },
@@ -166,18 +206,18 @@ export async function createBookingAction(
       }
 
       console.error(error);
-      return { ok: false, message: "Terjadi kesalahan saat memproses pemesanan." };
+      return { ok: false, message: "An error occurred while processing the booking." };
     }
   }
 
   revalidatePath("/product");
-  revalidatePath("/dashboard");
+  revalidatePath("/profile");
   revalidatePath("/history");
   revalidatePath("/wallet");
 
   return {
     ok: true,
-    message: "Pemesanan berhasil. Saldo sudah dipotong dan booking sudah lunas.",
+    message: "Booking successful. Thank you for your order!",
   };
 }
 

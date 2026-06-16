@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import SuccessModal from "./SuccessModal";
+import { Button } from "../ui/button";
 
 const ContactFormCard = () => {
   const [formData, setFormData] = useState({
@@ -38,7 +39,7 @@ const ContactFormCard = () => {
   return (
     <div className="bg-white border border-neutral-100 shadow-sm rounded-[2.5rem] p-8 md:p-12">
       <h2 className="text-3xl font-bold font-heading text-neutral-900">
-        Transmission
+        Contact Us
       </h2>
       <p className="text-gray-500 font-heading text-sm mt-3 leading-relaxed">
         Send us your thoughts or inquiries. Our concierge team typically
@@ -49,7 +50,7 @@ const ContactFormCard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {/* Input Nama */}
           <div className="space-y-2">
-            <label className="text-[#006949] text-[10px] font-heading font-bold tracking-widest uppercase block">
+            <label className="text-primary text-[10px] font-heading font-bold tracking-widest uppercase block">
               NAME
             </label>
             <input
@@ -57,14 +58,14 @@ const ContactFormCard = () => {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="ALEX RIVERA"
-              className="w-full font-heading bg-neutral-50 border border-neutral-100 rounded-xl px-5 py-4 text-sm text-neutral-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00C389]/20 focus:bg-white transition-all"
+              placeholder="Alex Randhika"
+              className="w-full font-heading bg-neutral-50 border border-neutral-100 rounded-xl px-5 py-4 text-sm text-neutral-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:bg-white transition-all"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-[#006949] text-[10px] font-heading font-bold tracking-widest uppercase block">
+            <label className="text-primary text-[10px] font-heading font-bold tracking-widest uppercase block">
               EMAIL
             </label>
             <input
@@ -72,31 +73,31 @@ const ContactFormCard = () => {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="ALEX@STATION.COM"
-              className="w-full font-heading bg-neutral-50 border border-neutral-100 rounded-xl px-5 py-4 text-sm text-neutral-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00C389]/20 focus:bg-white transition-all"
+              placeholder="alex@voltride.com"
+              className="w-full font-heading bg-neutral-50 border border-neutral-100 rounded-xl px-5 py-4 text-sm text-neutral-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:bg-white transition-all"
               required
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <label className="text-[#006949] text-[10px] font-heading font-bold tracking-widest uppercase block">
-            KRITIK & SARAN
+          <label className="text-primary text-[10px] font-heading font-bold tracking-widest uppercase block">
+            FEEDBACK
           </label>
           <textarea
             name="message"
             value={formData.message}
             onChange={handleChange}
-            placeholder="YOUR MESSAGE REGARDING OUR FLEET OR SERVICES..."
-            className="w-full h-48 font-heading bg-neutral-50 border border-neutral-100 rounded-xl px-5 py-4 text-sm text-neutral-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00C389]/20 focus:bg-white transition-all resize-none"
+            placeholder="Your feedback helps us drive the future of elite travel..."
+            className="w-full h-48 font-heading bg-neutral-50 border border-neutral-100 rounded-xl px-5 py-4 text-sm text-neutral-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:bg-white transition-all resize-none"
             required
           />
         </div>
 
         <div className="pt-2">
-          <button
+          <Button
             type="submit"
-            className="flex items-center justify-between gap-6 bg-neutral-900 text-white font-heading font-semibold text-xs tracking-wider px-6 py-4 rounded-xl hover:bg-neutral-800 transition-colors group"
+            className="flex items-center justify-between gap-6 text-white font-heading font-semibold text-xs tracking-wider px-6 py-4 rounded-xl transition-colors group"
           >
             <span>SEND MESSAGE</span>
             <svg
@@ -112,7 +113,7 @@ const ContactFormCard = () => {
                 d="M14 5l7 7m0 0l-7 7m7-7H3"
               />
             </svg>
-          </button>
+          </Button>
         </div>
       </form>
 

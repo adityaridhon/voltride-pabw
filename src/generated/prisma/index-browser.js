@@ -124,11 +124,39 @@ exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   email: 'email',
   name: 'name',
+  image: 'image',
+  emailVerified: 'emailVerified',
   phone: 'phone',
   password: 'password',
   role: 'role',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AccountScalarFieldEnum = {
+  userId: 'userId',
+  type: 'type',
+  provider: 'provider',
+  providerAccountId: 'providerAccountId',
+  refresh_token: 'refresh_token',
+  access_token: 'access_token',
+  expires_at: 'expires_at',
+  token_type: 'token_type',
+  scope: 'scope',
+  id_token: 'id_token',
+  session_state: 'session_state'
+};
+
+exports.Prisma.SessionScalarFieldEnum = {
+  sessionToken: 'sessionToken',
+  userId: 'userId',
+  expires: 'expires'
+};
+
+exports.Prisma.VerificationTokenScalarFieldEnum = {
+  identifier: 'identifier',
+  token: 'token',
+  expires: 'expires'
 };
 
 exports.Prisma.MitraScalarFieldEnum = {
@@ -150,10 +178,13 @@ exports.Prisma.MobilScalarFieldEnum = {
   color: 'color',
   plateNumber: 'plateNumber',
   pricePerDay: 'pricePerDay',
-  totalUnit: 'totalUnit',
-  availableUnit: 'availableUnit',
   status: 'status',
   imageUrl: 'imageUrl',
+  range: 'range',
+  acceleration: 'acceleration',
+  battery: 'battery',
+  chargingTime: 'chargingTime',
+  seat: 'seat',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -248,6 +279,9 @@ exports.TransactionStatus = exports.$Enums.TransactionStatus = {
 
 exports.Prisma.ModelName = {
   User: 'User',
+  Account: 'Account',
+  Session: 'Session',
+  VerificationToken: 'VerificationToken',
   Mitra: 'Mitra',
   Mobil: 'Mobil',
   Wallet: 'Wallet',

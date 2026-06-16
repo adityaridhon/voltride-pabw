@@ -71,7 +71,7 @@ export async function createArmada(input: CreateArmadaInput) {
       throw new Error(parsed.error.errors[0].message);
     }
 
-    const { mitraId, hargaPerHari, namaKendaraan, merek, model, nomorPlat, statusKetersediaan, foto, deskripsi } = parsed.data;
+    const { mitraId, hargaPerHari, namaKendaraan, merek, model, color, nomorPlat, statusKetersediaan, foto, range, acceleration, battery, chargingTime, seat } = parsed.data;
 
     // Pastikan mitra ada
     const mitra = await prisma.mitra.findUnique({ where: { id: mitraId } });
@@ -94,10 +94,16 @@ export async function createArmada(input: CreateArmadaInput) {
         name: namaKendaraan,
         brand: merek,
         model,
+        color,
         plateNumber: nomorPlat,
         pricePerDay: hargaPerHari,
-        status: (statusKetersediaan === "TERSEDIA" ? "ACTIVE" : statusKetersediaan === "DISEWA" ? "INACTIVE" : "MAINTENANCE") as any,
+        status: ( statusKetersediaan === "AVAILABLE"? "ACTIVE" : statusKetersediaan === "MAINTENANCE"? "MAINTENANCE": "INACTIVE" ) as any,
         imageUrl: foto,
+        range: range,
+        acceleration: acceleration,
+        battery: battery,
+        chargingTime: chargingTime,
+        seat: seat,
       },
     });
   });
@@ -114,7 +120,7 @@ export async function updateArmada(input: UpdateArmadaInput) {
       throw new Error(parsed.error.errors[0].message);
     }
 
-    const { id, namaKendaraan, merek, model, nomorPlat, statusKetersediaan, foto, hargaPerHari, ...rest } = parsed.data;
+    const { id, namaKendaraan, merek, model, color, nomorPlat, statusKetersediaan, foto, hargaPerHari, ...rest } = parsed.data;
 
     const armada = await prisma.mobil.findUnique({
       where: { id },
@@ -143,10 +149,13 @@ export async function updateArmada(input: UpdateArmadaInput) {
     if (namaKendaraan) updateData.name = namaKendaraan;
     if (merek) updateData.brand = merek;
     if (model) updateData.model = model;
+    if (color) updateData.color = color;
     if (nomorPlat) updateData.plateNumber = nomorPlat;
-    if (hargaPerHari) updateData.pricePerDay = hargaPerHari;
+    if (hargaPerHari !== undefined) {
+    updateData.pricePerDay = hargaPerHari;
+    }
     if (statusKetersediaan) {
-      updateData.status = statusKetersediaan === "TERSEDIA" ? "ACTIVE" : statusKetersediaan === "DISEWA" ? "INACTIVE" : "MAINTENANCE";
+      updateData.status = statusKetersediaan === "AVAILABLE"? "ACTIVE" : statusKetersediaan === "MAINTENANCE"? "MAINTENANCE": "INACTIVE" ;
     }
     if (foto) updateData.imageUrl = foto;
 
